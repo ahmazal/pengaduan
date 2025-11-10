@@ -24,7 +24,7 @@ async function addAdmin() {
       [nama_admin, email, hashedPassword]
     );
 
-    console.log("✅ Admin berhasil ditambahkan!");
+    console.log("Admin berhasil ditambahkan!");
     console.log("ID:", result.insertId);
     console.log("Email:", email);
     console.log("Password (plaintext):", passwordPlain);

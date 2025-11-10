@@ -63,6 +63,8 @@ export default function Register() {
             <input
               className="w-full py-2 border-b focus:ring-0 focus:outline-none"
               value={form.nik}
+              minLength={16}
+              maxLength={16}
               onChange={onChange("nik")}
               placeholder="NIK"
               required
