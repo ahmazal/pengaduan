@@ -5,11 +5,12 @@ import Register from './pages/Signup';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserDashboard from './pages/user/UserDashboard';
 import PrivateRoutes from './components/PrivateRoutes';
+import LandingPage from './pages/landingpages/App'
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/admin/dashboard" 
