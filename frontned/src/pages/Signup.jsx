@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../services/api";
 import Swal from "sweetalert2"; // import sweetalert2
+import BtnKembali from "../components/BtnKembali";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -47,6 +48,7 @@ export default function Register() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-transparent">
+      <BtnKembali />
       <div className="bg-white p-8 rounded-sm w-full">
         <h2 className="text-3xl font-bold text-center text-zinc-600">
           Daftar Akun Masyarakat

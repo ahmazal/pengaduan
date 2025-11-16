@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiPost } from "../services/api";
 import login from "../assets/img/login.png";
+import BtnKembali from "../components/BtnKembali";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -31,7 +32,7 @@ export default function Login() {
       if (res.role === "Admin") {
         nav("/admin/dashboard", { replace: true });
       } else {
-        nav("/user/dashboard", { replace: true });
+        nav("/", { replace: true });
       }
     } catch (error) {
       const message =
@@ -45,7 +46,8 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-center min-h-screen">
+    <div className="relative flex flex-col md:flex-row items-center justify-center min-h-screen">
+      <BtnKembali />
       {/* Gambar sisi kiri */}
       <div className="w-full hidden sm:flex md:w-1/2 h-64 md:h-screen relative items-center">
         <img

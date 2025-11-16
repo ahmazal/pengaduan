@@ -13,13 +13,13 @@ function CaraKerja() {
       side: "right",
     },
     {
-      title: "Langkah 3",
-      desc: "Pantau status laporan Anda secara berkala",
+      title: "Lakukan aduan",
+      desc: "isi data yang anda ingin adukan, dan kirim",
       side: "left",
     },
     {
-      title: "Langkah 3",
-      desc: "Pantau status laporan Anda secara berkala",
+      title: "Tunggu proses",
+      desc: "tunggu proses dari kami untuk aduan anda",
       side: "right",
     },
   ];
@@ -69,6 +69,9 @@ function CaraKerja() {
             )}
           </div>
         ))}
+      </div>
+      <div className="flex items-center justify-center">
+        <span className="w-max px-4 py-2 font-light text-white bg-blue-500 rounded-full border-4 border-white z-10">SELESAI</span>
       </div>
     </div>
   );

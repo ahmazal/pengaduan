@@ -1,1 +1,1 @@
-GET http://localhost:5000/api/masyarakat
+GET http://localhost:5000/pengaduan

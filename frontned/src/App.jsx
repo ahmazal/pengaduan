@@ -6,6 +6,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserDashboard from './pages/user/UserDashboard';
 import PrivateRoutes from './components/PrivateRoutes';
 import LandingPage from './pages/landingpages/App'
+import FormPengaduan from './pages/user/FormPengaduan';
 
 function App() {
   return (
@@ -27,6 +28,11 @@ function App() {
           </PrivateRoutes>
         }
       />
+      <Route path="/user/buatpengaduan" element={
+        <PrivateRoutes Role={'Masyarakat'} >
+            <FormPengaduan/>
+          </PrivateRoutes>
+      } />
     </Routes>
   );
 }
