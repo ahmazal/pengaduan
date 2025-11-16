@@ -7,6 +7,9 @@ import UserDashboard from './pages/user/UserDashboard';
 import PrivateRoutes from './components/PrivateRoutes';
 import LandingPage from './pages/landingpages/App'
 import FormPengaduan from './pages/user/FormPengaduan';
+import SemuaPengaduan from './pages/admin/SemuaPengaduan';
+import ListAduan from './pages/user/ListAduan';
+import AnalyticsPage from './pages/admin/AnalyticsPage';
 
 function App() {
   return (
@@ -14,13 +17,30 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      {/* admin */}
       <Route path="/admin/dashboard" 
         element={
           <PrivateRoutes Role={'Admin'}>
             <AdminDashboard/>
           </PrivateRoutes>
         } 
-        />
+      />
+      <Route path="/admin/listAduan" 
+        element={
+          <PrivateRoutes Role={'Admin'}>
+            <SemuaPengaduan />
+          </PrivateRoutes>
+        } 
+      />
+      <Route path="/admin/analytics" 
+        element={
+          <PrivateRoutes Role={'Admin'}>
+            <AnalyticsPage />
+          </PrivateRoutes>
+        } 
+      />
+
+        {/* user */}
       <Route path='/user/dashboard' 
         element={
           <PrivateRoutes Role={'Masyarakat'} >
@@ -31,6 +51,11 @@ function App() {
       <Route path="/user/buatpengaduan" element={
         <PrivateRoutes Role={'Masyarakat'} >
             <FormPengaduan/>
+          </PrivateRoutes>
+      } />
+      <Route path="/user/riwayat" element={
+        <PrivateRoutes Role={'Masyarakat'} >
+            <ListAduan/>
           </PrivateRoutes>
       } />
     </Routes>

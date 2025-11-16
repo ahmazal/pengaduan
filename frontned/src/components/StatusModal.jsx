@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { X, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange }) {
   const [selectedStatus, setSelectedStatus] = useState(pengaduan?.status || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async () => {
     if (selectedStatus === pengaduan?.status) {
@@ -11,9 +13,18 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
     }
 
     setIsLoading(true);
-    await onStatusChange(pengaduan?.id_pengaduan, selectedStatus);
-    setIsLoading(false);
-    onClose();
+    try {
+      await onStatusChange(pengaduan?.id_pengaduan, selectedStatus);
+      setSuccessMessage("Status berhasil diubah!");
+      setTimeout(() => {
+        onClose();
+        setSuccessMessage("");
+      }, 1000);
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen || !pengaduan) return null;
@@ -26,28 +37,44 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6">
-        {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Ubah Status Pengaduan</h2>
-          <p className="text-gray-500 text-sm mt-1">ID: {pengaduan.id_pengaduan}</p>
+    <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
+        {/* Header dengan Close Button */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Ubah Status Pengaduan</h2>
+            <p className="text-gray-500 text-sm mt-1">ID Pengaduan: <span className="font-semibold text-gray-700">#{pengaduan.id_pengaduan}</span></p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition"
+          >
+            <X size={24} />
+          </button>
         </div>
 
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
+            <CheckCircle size={20} className="text-green-600" />
+            <span className="text-green-700">{successMessage}</span>
+          </div>
+        )}
+
         {/* Detail Pengaduan */}
-        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="bg-linear-to-br from-gray-50 to-gray-100 p-6 rounded-lg mb-6 border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-gray-600 text-sm">Judul Pengaduan</p>
-              <p className="font-semibold text-gray-800">{pengaduan.judul_pengaduan}</p>
+              <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider">Judul Pengaduan</p>
+              <p className="font-semibold text-gray-800 text-base mt-1">{pengaduan.judul_pengaduan}</p>
             </div>
             <div>
-              <p className="text-gray-600 text-sm">NIK Pelapor</p>
-              <p className="font-semibold text-gray-800">{pengaduan.nik}</p>
+              <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider">NIK Pelapor</p>
+              <p className="font-semibold text-gray-800 text-base mt-1">{pengaduan.nik}</p>
             </div>
             <div>
-              <p className="text-gray-600 text-sm">Tanggal Laporan</p>
-              <p className="font-semibold text-gray-800">
+              <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider">Tanggal Laporan</p>
+              <p className="font-semibold text-gray-800 text-base mt-1">
                 {new Date(pengaduan.tgl_pengaduan).toLocaleDateString('id-ID', {
                   year: 'numeric',
                   month: 'long',
@@ -56,60 +83,88 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
               </p>
             </div>
             <div>
-              <p className="text-gray-600 text-sm">Status Saat Ini</p>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-white text-sm font-medium mt-1 ${
-                  pengaduan.status === "Menunggu"
-                    ? "bg-blue-500"
-                    : pengaduan.status === "Diproses"
-                    ? "bg-yellow-500"
-                    : pengaduan.status === "Selesai"
-                    ? "bg-green-600"
-                    : "bg-red-600"
-                }`}
-              >
-                {pengaduan.status}
-              </span>
+              <p className="text-gray-600 text-xs font-semibold uppercase tracking-wider">Status Saat Ini</p>
+              <div className="mt-1">
+                <span
+                  className={`inline-flex items-center px-4 py-2 rounded-full text-white text-sm font-semibold gap-2 ${
+                    pengaduan.status === "Menunggu"
+                      ? "bg-blue-500"
+                      : pengaduan.status === "Diproses"
+                      ? "bg-yellow-500"
+                      : pengaduan.status === "Selesai"
+                      ? "bg-green-600"
+                      : "bg-red-600"
+                  }`}
+                >
+                  {pengaduan.status === "Menunggu"}
+                  {pengaduan.status === "Diproses"}
+                  {pengaduan.status === "Selesai"}
+                  {pengaduan.status === "Tidak Valid"}
+                  {pengaduan.status}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Isi Pengaduan */}
         <div className="mb-6">
-          <p className="text-gray-600 text-sm font-semibold mb-2">Isi Pengaduan</p>
-          <div className="bg-gray-50 p-4 rounded-lg max-h-40 overflow-y-auto">
-            <p className="text-gray-700 text-sm">{pengaduan.isi_laporan}</p>
+          <p className="text-gray-800 font-semibold mb-2 text-xs uppercase tracking-wider">Isi Pengaduan</p>
+          <div className="bg-gray-50 p-4 rounded-lg max-h-48 overflow-y-auto border border-gray-200">
+            <p className="text-gray-700 text-sm leading-relaxed">{pengaduan.isi_laporan}</p>
           </div>
         </div>
 
+        {/* Gambar Pengaduan */}
+        {pengaduan.foto && (
+          <div className="mb-6">
+            <p className="text-gray-800 font-semibold mb-2 text-xs uppercase tracking-wider">Lampiran Gambar</p>
+            <div className="bg-gray-100 p-4 rounded-lg border border-gray-300 flex justify-center items-center">
+              <img
+                src={`http://localhost:5000/uploads/${pengaduan.foto}`}
+                alt="Bukti Pengaduan"
+                className="max-w-full max-h-80 rounded-lg object-contain shadow-md"
+                onError={(e) => {
+                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%23f3f4f6' width='200' height='200'/%3E%3Ctext x='50%' y='50%' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3EGambar tidak ditemukan%3C/text%3E%3C/svg%3E";
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Separator */}
+        <div className="border-t border-gray-200 my-6"></div>
+
         {/* Status Selection */}
         <div className="mb-6">
-          <p className="text-gray-800 font-semibold mb-3">Pilih Status Baru</p>
-          <div className="space-y-2">
+          <p className="text-gray-800 font-semibold mb-4">Pilih Status Baru</p>
+          <div className="space-y-3">
             {statusOptions.map((option) => (
               <label
                 key={option.value}
-                className="flex items-start p-3 border-2 rounded-lg cursor-pointer transition hover:bg-gray-50"
+                className="flex items-start p-4 border-2 rounded-lg cursor-pointer transition hover:shadow-md"
                 style={{
                   borderColor: selectedStatus === option.value ? "#4F46E5" : "#E5E7EB",
-                  backgroundColor: selectedStatus === option.value ? "#EEF2FF" : "transparent",
+                  backgroundColor: selectedStatus === option.value ? "#F0F4FF" : "#FAFBFC",
                 }}
               >
-                <input
-                  type="radio"
-                  name="status"
-                  value={option.value}
-                  checked={selectedStatus === option.value}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="mt-1 mr-3 cursor-pointer"
-                />
+                <div className="shrink-0 mr-3 mt-1">
+                  <input
+                    type="radio"
+                    name="status"
+                    value={option.value}
+                    checked={selectedStatus === option.value}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="w-5 h-5 cursor-pointer"
+                  />
+                </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`${option.color} text-white px-2 py-1 rounded text-xs font-semibold`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`${option.color} text-white px-3 py-1 rounded text-xs font-semibold`}>
                       {option.label}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mt-1">{option.description}</p>
+                  <p className="text-gray-600 text-sm">{option.description}</p>
                 </div>
               </label>
             ))}
@@ -117,18 +172,18 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+            className="px-6 py-2 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 font-medium"
           >
             Batal
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isLoading}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2"
+            disabled={isLoading || selectedStatus === pengaduan?.status}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
           >
             {isLoading ? (
               <>
@@ -139,7 +194,10 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
                 Menyimpan...
               </>
             ) : (
-              "Simpan Perubahan"
+              <>
+                <CheckCircle size={18} />
+                Simpan Perubahan
+              </>
             )}
           </button>
         </div>

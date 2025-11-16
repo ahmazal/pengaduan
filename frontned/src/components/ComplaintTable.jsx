@@ -87,7 +87,7 @@ function ComplaintTable() {
           </tr>
         </thead>
         <tbody>
-          {complaints.map((c, idx) => (
+          {complaints.slice(0,5).map((c , idx) => (
             <tr key={c.id_pengaduan} className="border-b hover:bg-gray-50">
               <td className="p-3">{idx + 1}</td>
               <td className="p-3 max-w-xs truncate">{c.judul_pengaduan}</td>

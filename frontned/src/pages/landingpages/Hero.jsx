@@ -3,8 +3,11 @@ import { TfiHelpAlt } from "react-icons/tfi";
 import { RiUserVoiceLine } from "react-icons/ri";
 import { GrSystem } from "react-icons/gr";
 import Title from "../../components/Title";
+import { useNavigate } from "react-router-dom";
 
 function Hero() {
+  const nav = useNavigate()
+  
   const ListLayanan = [
     {
       symbol: <TfiHelpAlt />,
@@ -51,9 +54,11 @@ function Hero() {
           </h3>
         </div>
         <div>
-          <h2 className="text-2xl font-bold border border-amber-500 px-4 py-2 rounded-full hover:bg-amber-500 hover:text-white duration-300 cursor-pointer">
+          <button
+          onClick={() => nav("/user/buatpengaduan")}
+          className="text-2xl font-bold border border-amber-500 px-4 py-2 rounded-full hover:bg-amber-500 hover:text-white duration-300 cursor-pointer">
             ajukan aduan
-          </h2>
+          </button>
         </div>
       </div>
       <Title 

@@ -15,8 +15,10 @@ export default function DashboardRingkasan() {
       try {
         setLoading(true);
         const res = await apiClient.get('/masyarakat/pengaduan');
-        // Response format: [{ payload: data, message, metaData }]
-        const pengaduan = res.data[0]?.payload || [];
+        // Handle both old array format dan new object format
+        const pengaduan = Array.isArray(res.data)
+          ? res.data[0]?.payload || []
+          : (res.data.payload || res.data.data || []);
         
         const stats = {
           total: pengaduan.length,

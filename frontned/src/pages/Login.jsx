@@ -19,26 +19,28 @@ export default function Login() {
     try {
       const res = await apiPost("/auth/login", { email, password });
 
-      // validasi hasil respons
-      if (!res || !res.token || !res.role) {
+      // Handle response format: { success, payload: {token, role, user}, message, metaData }
+      if (!res.success) {
+        throw new Error(res.message || "Login gagal");
+      }
+
+      const { token, role, user } = res.payload;
+      if (!token || !role) {
         throw new Error("Respons server tidak valid");
       }
 
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("role", res.role);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("user", JSON.stringify(user));
 
       // redirect sesuai role
-      if (res.role === "Admin") {
+      if (role === "Admin") {
         nav("/admin/dashboard", { replace: true });
       } else {
         nav("/", { replace: true });
       }
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Terjadi kesalahan saat login";
+      const message = error.message || "Terjadi kesalahan saat login";
       setErr(message);
     } finally {
       setLoading(false);

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import StatusModal from "../../components/StatusModal";
+import NavAdmin from "../../components/NavAdmin";
+import ComplaintChartAll from "../../components/ComplaintChartAll";
 
 export default function AdminDashboard() {
   const nav = useNavigate();
@@ -19,12 +21,6 @@ export default function AdminDashboard() {
     selesai: 0,
     tidakValid: 0,
   });
-
-  const logout = () => {
-    localStorage.clear();
-    nav("/login");
-  };
-
   const fetchPengaduan = async () => {
     try {
       setLoading(true);
@@ -105,189 +101,143 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
-      {/* ======================== Sidebar ======================== */}
-      <aside className="w-64 bg-indigo-950 shadow-xl border-r p-6 flex flex-col fixed h-screen">
-        <h2 className="text-2xl font-bold text-indigo-200 mb-8 text-center">
-          Administrator
-        </h2>
+  {/* Sidebar */}
+  <div className="hidden md:block">
+    <NavAdmin />
+  </div>
 
-        <nav className="flex flex-col gap-4">
-          <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-100 text-white hover:text-black transition"
-            onClick={() => nav("/admin/dashboard")}
-          >
-            📊 Dashboard
-          </button>
+  {/* Mobile Sidebar Toggle */}
+  <button
+    onClick={() => setShowSidebar(true)}
+    className="md:hidden fixed top-4 left-4 z-50 bg-indigo-600 text-white px-3 py-2 rounded-lg shadow"
+  >
+    ☰ Menu
+  </button>
 
-          <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-100 text-white hover:text-black transition"
-            onClick={() => nav("/admin/pengaduan")}
-          >
-            📝 Pengaduan
-          </button>
+  {/* MAIN CONTENT */}
+  <main className="flex-1 p-4 md:p-10 md:ml-64 space-y-10">
+    <h1 className="text-xl md:text-3xl font-bold text-indigo-600 mb-4">
+      Selamat datang, {user.nama_admin}
+    </h1>
 
-          <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-100 text-white hover:text-black transition"
-            onClick={() => nav("/admin/profil")}
-          >
-            👤 Profil
-          </button>
-        </nav>
-
-        <button
-          onClick={logout}
-          className="mt-auto bg-red-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition"
-        >
-          Logout
-        </button>
-      </aside>
-
-      {/* ======================== MAIN CONTENT ======================== */}
-      <main className="ml-64 flex-1 p-10 space-y-10">
-        <h1 className="text-3xl font-bold text-indigo-600 mb-4">
-          Selamat datang, {user.nama_admin}
-        </h1>
-
-        {/* ======================== SUMMARY CARDS ======================== */}
-        <div className="bg-white p-8 shadow-lg rounded-2xl">
-          <h2 className="text-xl font-semibold text-gray-700 mb-6">
-            Ringkasan Status Pengaduan
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <CardStatus
-              title="Menunggu"
-              color="bg-blue-500"
-              count={stats.menunggu}
-            />
-
-            <CardStatus
-              title="Diproses"
-              color="bg-yellow-500"
-              count={stats.diproses}
-            />
-
-            <CardStatus
-              title="Selesai"
-              color="bg-green-600"
-              count={stats.selesai}
-            />
-
-            <CardStatus
-              title="Tidak Valid"
-              color="bg-red-600"
-              count={stats.tidakValid}
-            />
-          </div>
-        </div>
-
-        {/* ======================== TABLE CARD ======================== */}
-        <div className="bg-white p-8 shadow-lg rounded-2xl">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-800">Daftar Pengaduan</h2>
-            <button
-              onClick={fetchPengaduan}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
-            >
-              🔄 Refresh
-            </button>
-          </div>
-
-          {/* Search dan Filter */}
-          <div className="flex gap-4 mb-6">
-            <input
-              type="text"
-              placeholder="Cari berdasarkan ID, NIK, atau Judul..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="Semua">Semua Status</option>
-              <option value="Menunggu">Menunggu</option>
-              <option value="Diproses">Diproses</option>
-              <option value="Selesai">Selesai</option>
-              <option value="Tidak Valid">Tidak Valid</option>
-            </select>
-          </div>
-
-          {loading ? (
-            <p className="text-gray-500">Memuat data...</p>
-          ) : filteredPengaduan.length === 0 ? (
-            <p className="text-gray-500">
-              {pengaduan.length === 0 ? "Tidak ada pengaduan tersedia." : "Tidak ada pengaduan yang cocok dengan filter."}
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-indigo-500 text-white">
-                  <tr>
-                    <th className="p-3 text-left">ID</th>
-                    <th className="p-3 text-left">NIK</th>
-                    <th className="p-3 text-left">Judul</th>
-                    <th className="p-3 text-left">Tanggal</th>
-                    <th className="p-3 text-center">Status</th>
-                    <th className="p-3 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPengaduan.map((p) => (
-                    <tr key={p.id_pengaduan} className="border-t hover:bg-gray-50">
-                      <td className="p-3 text-center text-sm font-semibold">{p.id_pengaduan}</td>
-                      <td className="p-3 text-center text-sm">{p.nik}</td>
-                      <td className="p-3 max-w-xs truncate text-sm">{p.judul_pengaduan}</td>
-                      <td className="p-3 text-center text-sm">{formatDate(p.tgl_pengaduan)}</td>
-                      <td className="p-3 text-center">
-                        <span
-                          className={`
-                            px-3 py-1 rounded-full text-white text-sm font-medium
-                            ${
-                              p.status === "Menunggu"
-                                ? "bg-blue-500"
-                                : p.status === "Diproses"
-                                ? "bg-yellow-500"
-                                : p.status === "Selesai"
-                                ? "bg-green-600"
-                                : "bg-red-600"
-                            }
-                          `}
-                        >
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
-                        <button
-                          onClick={() => handleOpenModal(p)}
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
-                        >
-                          Ubah Status
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          <p className="text-gray-500 text-sm mt-4">
-            Menampilkan {filteredPengaduan.length} dari {pengaduan.length} pengaduan
-          </p>
-        </div>
-      </main>
-
-      {/* Status Modal */}
-      <StatusModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        pengaduan={selectedPengaduan}
-        onStatusChange={handleStatusChange}
-      />
+    {/* CHART */}
+    <div className="bg-white p-6 md:p-8 shadow-lg rounded-2xl">
+      <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-6">
+        Analitik Pengaduan
+      </h2>
+      <ComplaintChartAll />
     </div>
+
+    {/* TABLE */}
+    <div className="bg-white p-6 md:p-8 shadow-lg rounded-2xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-800">
+          Daftar Pengaduan
+        </h2>
+        <button
+          onClick={fetchPengaduan}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm shadow"
+        >
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Cari berdasarkan ID, NIK, atau Judul..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+        />
+
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="Semua">Semua Status</option>
+          <option value="Menunggu">Menunggu</option>
+          <option value="Diproses">Diproses</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Tidak Valid">Tidak Valid</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <p className="text-gray-500">Memuat data...</p>
+      ) : filteredPengaduan.length === 0 ? (
+        <p className="text-gray-500">Tidak ada pengaduan ditemukan.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <table className="w-full text-sm">
+            <thead className="bg-indigo-600 text-white">
+              <tr>
+                <th className="p-3 text-left">ID</th>
+                <th className="p-3 text-left">NIK</th>
+                <th className="p-3 text-left">Judul</th>
+                <th className="p-3 text-left">Tanggal</th>
+                <th className="p-3 text-center">Status</th>
+                <th className="p-3 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPengaduan.map((p) => (
+                <tr key={p.id_pengaduan} className="border-t hover:bg-gray-50">
+                  <td className="p-3">{p.id_pengaduan}</td>
+                  <td className="p-3">{p.nik}</td>
+                  <td className="p-3 truncate max-w-xs">{p.judul_pengaduan}</td>
+                  <td className="p-3">{formatDate(p.tgl_pengaduan)}</td>
+                  <td className="p-3 text-center">
+                    <span
+                      className={`
+                        px-3 py-1 rounded-full text-white text-xs font-medium
+                        ${
+                          p.status === "Menunggu"
+                            ? "bg-blue-500"
+                            : p.status === "Diproses"
+                            ? "bg-yellow-500"
+                            : p.status === "Selesai"
+                            ? "bg-green-600"
+                            : "bg-red-600"
+                        }
+                      `}
+                    >
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => handleOpenModal(p)}
+                      className="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-xs"
+                    >
+                      Ubah Status
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <p className="text-gray-500 text-sm mt-4">
+        Menampilkan {filteredPengaduan.length} dari {pengaduan.length} pengaduan
+      </p>
+    </div>
+  </main>
+
+  {/* Modal */}
+  <StatusModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    pengaduan={selectedPengaduan}
+    onStatusChange={handleStatusChange}
+  />
+</div>
+
   );
 }
 

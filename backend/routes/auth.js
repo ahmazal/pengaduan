@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db.js');
+const response = require('../response');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -15,12 +16,12 @@ router.post('/register', async (req, res) => {
   try {
     const { nik, nama, tglLahir, password, email, telp, alamat } = req.body;
     if (!nik || !nama || !tglLahir || !password || !email || !telp || !alamat) {
-      return res.status(400).json({ message: 'Semua field wajib diisi' });
+      return response(400, null, 'Semua field wajib diisi', res);
     }
 
     // Cek tglLahir / nik sudah ada
     const [exists] = await pool.query('SELECT nik, email FROM masyarakat WHERE nik = ? OR email = ?', [nik, email]);
-    if (exists.length) return res.status(409).json({ message: 'NIK atau email sudah terdaftar' });
+    if (exists.length) return response(409, null, 'NIK atau email sudah terdaftar', res);
 
     const hash = await bcrypt.hash(password, 10);
     await pool.query(
@@ -28,21 +29,21 @@ router.post('/register', async (req, res) => {
       [nik, nama, tglLahir, hash, email, telp, alamat]
     );
 
-    res.status(201).json({ message: 'Registrasi berhasil' });
+    return response(201, null, 'Registrasi berhasil', res);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Terjadi kesalahan server' });
+    return response(500, null, 'Terjadi kesalahan server', res);
   }
 });
 
 /**
  * Login (bisa admin atau masyarakat)
- * Response: { token, role, user }
+ * Response: { token, role, user } inside payload
  */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ message: 'email dan password diperlukan' });
+    if (!email || !password) return response(400, null, 'email dan password diperlukan', res);
 
     // cek di tabel admin
     const [adminRows] = await pool.query('SELECT * FROM admin WHERE email = ?', [email]);
@@ -57,7 +58,11 @@ router.post('/login', async (req, res) => {
       }
       if (ok) {
         const token = genToken({ role: 'Admin', id: admin.id_admin, email: admin.email });
-        return res.json({ token, role: 'Admin', user: { id_admin: admin.id_admin, email: admin.email, nama_admin: admin.nama_admin, email: admin.email } });
+        return response(200, { 
+          token, 
+          role: 'Admin', 
+          user: { id_admin: admin.id_admin, email: admin.email, nama_admin: admin.nama_admin } 
+        }, 'Login berhasil', res);
       }
     }
 
@@ -66,16 +71,20 @@ router.post('/login', async (req, res) => {
     if (userRows.length) {
       const user = userRows[0];
       const ok = await bcrypt.compare(password, user.password);
-      if (!ok) return res.status(401).json({ message: 'Kredensial salah' });
+      if (!ok) return response(401, null, 'Kredensial salah', res);
 
       const token = genToken({ role: 'Masyarakat', nik: user.nik, email: user.email });
-      return res.json({ token, role: 'Masyarakat', user: { nik: user.nik, email: user.email, nama: user.nama, email: user.email } });
+      return response(200, { 
+        token, 
+        role: 'Masyarakat', 
+        user: { nik: user.nik, email: user.email, nama: user.nama } 
+      }, 'Login berhasil', res);
     }
 
-    return res.status(401).json({ message: 'User tidak ditemukan atau kredensial salah' });
+    return response(401, null, 'User tidak ditemukan atau kredensial salah', res);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Terjadi kesalahan server' });
+    return response(500, null, 'Terjadi kesalahan server', res);
   }
 });
 

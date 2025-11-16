@@ -43,6 +43,8 @@ export default function FormPengaduan() {
       });
 
       const data = await res.json();
+      console.log("DEBUG - Response dari backend:", data);
+      console.log("DEBUG - data.success:", data.success);
 
       if (data.success) {
         alert("Pengaduan berhasil dikirim!");
@@ -52,7 +54,7 @@ export default function FormPengaduan() {
 
         // RESET FILE
         setFile(null);
-        if (fileRef.current) fileRef.current.value = ""; // <<< tambahan agar file kosong
+        if (fileRef.current) fileRef.current.value = "";
 
       } else {
         alert(data.message || "Gagal mengirim pengaduan.");

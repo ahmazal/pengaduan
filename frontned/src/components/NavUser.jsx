@@ -31,10 +31,10 @@ export default function NavUser() {
         </button>
 
         <button
-          onClick={() => nav("/user/pengaduan")}
+          onClick={() => nav("/user/riwayat")}
           className="text-left px-4 py-2 rounded-lg hover:bg-indigo-100 hover:text-black transition"
         >
-          📄 Pengaduan Saya
+          📋 Riwayat Pengaduan
         </button>
 
         <button
