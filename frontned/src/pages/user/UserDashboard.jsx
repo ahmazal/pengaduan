@@ -12,7 +12,7 @@ function UserDashboard() {
   return (
     <div className="relative flex min-h-screen">
       <NavUser />
-      <div className="ml-72">
+      <div className="ml-72 pt-8">
         {/* HEADER DASHBOARD */}
         <div className="flex-3/4 items-center justify-between mb-6">
           {/* Judul */}

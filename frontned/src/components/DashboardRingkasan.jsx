@@ -38,10 +38,10 @@ export default function DashboardRingkasan() {
   }, []);
 
   const items = [
-    { label: "Total Pengaduan", value: stats.total, bg: "bg-blue-500/90", link: "#" },
-    { label: "Menunggu Diproses", value: stats.menunggu, bg: "bg-rose-500/90", link: "#" },
-    { label: "Sedang Diproses", value: stats.diproses, bg: "bg-amber-400/90", link: "#" },
-    { label: "Selesai", value: stats.selesai, bg: "bg-emerald-500/90", link: "#" },
+    { label: "Total Pengaduan", value: stats.total, bg: "bg-blue-500/90"},
+    { label: "Menunggu Diproses", value: stats.menunggu, bg: "bg-rose-500/90"},
+    { label: "Sedang Diproses", value: stats.diproses, bg: "bg-amber-400/90"},
+    { label: "Selesai", value: stats.selesai, bg: "bg-emerald-500/90"},
   ];
 
   return (
@@ -49,7 +49,6 @@ export default function DashboardRingkasan() {
       {items.map((it, i) => (
         <a
           key={i}
-          href={it.link}
           className={`block p-5 rounded-xl ${it.bg} text-white shadow-lg hover:shadow-2xl transform hover:scale-[1.02] transition`}
         >
           <div className="flex items-center justify-between">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import apiClient from "../../api/apiClient";
 import StatusModal from "../../components/StatusModal";
 import NavAdmin from "../../components/NavAdmin";
@@ -81,10 +82,20 @@ export default function AdminDashboard() {
         tidakValid: updatedPengaduan.filter((p) => p.status === "Tidak Valid").length,
       });
 
-      alert("Status pengaduan berhasil diupdate!");
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Status pengaduan berhasil diupdate!",
+        confirmButtonColor: "#4f46e5"
+      });
     } catch (err) {
       console.error("Gagal update status:", err);
-      alert("Gagal mengupdate status pengaduan");
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal mengupdate status pengaduan",
+        confirmButtonColor: "#4f46e5"
+      });
     }
   };
 

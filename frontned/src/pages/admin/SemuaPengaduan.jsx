@@ -29,7 +29,7 @@ function SemuaPengaduan() {
   const handleStatusChange = async (id_pengaduan, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      await apiClient.put(`/pengaduan/${id_pengaduan}`, 
+      await apiClient.put(`/pengaduan/${id_pengaduan}/status`, 
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );

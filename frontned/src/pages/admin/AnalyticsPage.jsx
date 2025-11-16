@@ -51,38 +51,31 @@ export default function AnalyticsPage() {
       <main className="ml-64 flex-1 p-8 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => nav(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800"
-          >
-            <ChevronLeft size={24} />
-            Kembali
-          </button>
           <h1 className="text-3xl font-bold text-indigo-600">Analitik Pengaduan Lengkap</h1>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-gradient-to-br from-gray-400 to-gray-600 text-white rounded-lg shadow p-6">
+          <div className="bg-linear-to-br from-gray-400 to-gray-600 text-white rounded-lg shadow p-6">
             <p className="text-sm opacity-90">Total Pengaduan</p>
             <p className="text-4xl font-bold mt-2">{stats.total}</p>
           </div>
-          <div className="bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg shadow p-6">
+          <div className="bg-linear-to-br from-blue-400 to-blue-600 text-white rounded-lg shadow p-6">
             <p className="text-sm opacity-90">Menunggu</p>
             <p className="text-4xl font-bold mt-2">{stats.menunggu}</p>
             <p className="text-xs opacity-75 mt-2">{((stats.menunggu / stats.total) * 100).toFixed(1)}%</p>
           </div>
-          <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg shadow p-6">
+          <div className="bg-linear-to-br from-yellow-400 to-yellow-600 text-white rounded-lg shadow p-6">
             <p className="text-sm opacity-90">Diproses</p>
             <p className="text-4xl font-bold mt-2">{stats.diproses}</p>
             <p className="text-xs opacity-75 mt-2">{((stats.diproses / stats.total) * 100).toFixed(1)}%</p>
           </div>
-          <div className="bg-gradient-to-br from-green-400 to-green-600 text-white rounded-lg shadow p-6">
+          <div className="bg-linear-to-br from-green-400 to-green-600 text-white rounded-lg shadow p-6">
             <p className="text-sm opacity-90">Selesai</p>
             <p className="text-4xl font-bold mt-2">{stats.selesai}</p>
             <p className="text-xs opacity-75 mt-2">{((stats.selesai / stats.total) * 100).toFixed(1)}%</p>
           </div>
-          <div className="bg-gradient-to-br from-red-400 to-red-600 text-white rounded-lg shadow p-6">
+          <div className="bg-linear-to-br from-red-400 to-red-600 text-white rounded-lg shadow p-6">
             <p className="text-sm opacity-90">Tidak Valid</p>
             <p className="text-4xl font-bold mt-2">{stats.tidakValid}</p>
             <p className="text-xs opacity-75 mt-2">{((stats.tidakValid / stats.total) * 100).toFixed(1)}%</p>

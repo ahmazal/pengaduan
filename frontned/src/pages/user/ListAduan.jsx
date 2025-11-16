@@ -82,7 +82,6 @@ export default function ListAduan() {
       <NavUser />
 
       <main className="ml-64 w-full p-8">
-        {/* Header dengan Tombol Kembali */}
         <div className="flex items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Riwayat Semua Pengaduan</h1>
         </div>

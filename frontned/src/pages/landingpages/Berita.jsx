@@ -4,12 +4,16 @@ import kriminalitas from "../../assets/img/kriminalitas.jpg";
 import pelayanan from "../../assets/img/pelayanan.jpg";
 import fasilitas from "../../assets/img/fasilitas.jpg";
 import Title from "../../components/Title";
+import apiClient from "../../api/apiClient";
 
 const Berita = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
   const scrolRef = useRef(null);
 
-  const cards = [
+  // Fallback data jika backend error
+  const fallbackCards = [
     {
       id: 1,
       image: jln,
@@ -48,9 +52,46 @@ const Berita = () => {
     },
   ];
 
+  // Fetch berita dari backend
+  const fetchBerita = async () => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get("/pengaduan/berita/completed");
+      
+      const data = Array.isArray(res.data)
+        ? res.data[0]?.payload || []
+        : res.data.payload || res.data.data || [];
+
+      if (data.length > 0) {
+        // Transform backend data ke format cards
+        const transformedCards = data.map((item, index) => ({
+          id: item.id_pengaduan,
+          image: item.foto ? `http://localhost:5000/uploads/${item.foto}` : jln,
+          title: item.judul_pengaduan,
+          judul: "Berita Terkini",
+          description: item.judul_pengaduan,
+          point: item.isi_laporan,
+        }));
+
+        setCards(transformedCards);
+      } else {
+        setCards(fallbackCards);
+      }
+    } catch (err) {
+      console.error("Gagal fetch berita:", err);
+      setCards(fallbackCards);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBerita();
+  }, []);
+
   useEffect(() => {
     const intervaled = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % cards.length);
+      setCurrentIndex((prev) => (prev + 1) % (cards.length || 1));
     }, 3000);
     return () => clearInterval(intervaled);
   }, [cards.length]);
@@ -66,8 +107,8 @@ const Berita = () => {
 
   const goToSlide = (index) => setCurrentIndex(index);
   const goToPrevious = () =>
-    setCurrentIndex((prev) => (prev === 0 ? cards.length - 1 : prev - 1));
-  const goToNext = () => setCurrentIndex((prev) => (prev + 1) % cards.length);
+    setCurrentIndex((prev) => (prev === 0 ? (cards.length || 1) - 1 : prev - 1));
+  const goToNext = () => setCurrentIndex((prev) => (prev + 1) % (cards.length || 1));
 
   return (
     <div id="Berita">

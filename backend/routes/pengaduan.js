@@ -52,15 +52,28 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// GET pengaduan yang sudah selesai (untuk news/berita)
+router.get("/berita/completed", async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM pengaduan WHERE status = 'Selesai' ORDER BY tgl_pengaduan DESC LIMIT 10"
+    );
+    return response(200, rows, "Data berita ditemukan", res);
+  } catch (err) {
+    console.error("Error:", err);
+    return response(500, null, "Gagal mengambil data berita", res);
+  }
+});
+
 // ==================== POST Endpoints ====================
 
 // CREATE pengaduan baru (user)
 router.post("/", auth, upload.single("foto"), async (req, res) => {
   try {
-    const { nik, judul_pengaduan, tgl_pengaduan, isi_laporan } = req.body;
+    const { nik, judul_pengaduan, tgl_pengaduan, isi_laporan, lokasi } = req.body;
 
     // Validasi input
-    if (!nik || !judul_pengaduan || !tgl_pengaduan || !isi_laporan) {
+    if (!nik || !judul_pengaduan || !tgl_pengaduan || !isi_laporan || !lokasi) {
       return response(400, null, "Data tidak lengkap", res);
     }
 
@@ -78,8 +91,8 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
 
     // Insert ke database
     const sql = `
-      INSERT INTO pengaduan (nik, judul_pengaduan, tgl_pengaduan, isi_laporan, foto, status)
-      VALUES (?, ?, ?, ?, ?, 'Menunggu')
+      INSERT INTO pengaduan (nik, judul_pengaduan, tgl_pengaduan, isi_laporan, foto, lokasi, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'Menunggu')
     `;
 
     const [result] = await pool.query(sql, [
@@ -88,6 +101,7 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
       tgl_pengaduan,
       isi_laporan,
       foto,
+      lokasi,
     ]);
 
     return response(
