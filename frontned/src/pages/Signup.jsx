@@ -39,7 +39,7 @@ export default function Register() {
       Swal.fire({
         icon: "error",
         title: "Registrasi Gagal",
-        text: "Mohon masukkan data yang valid atau coba lagi.",
+        text: "nik tersebut telah terdaftar",
         confirmButtonColor: "#dc2626",
       });
       setErr("Mohon masukkan data yang valid");

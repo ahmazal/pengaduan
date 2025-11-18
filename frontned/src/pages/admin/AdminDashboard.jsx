@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           onClick={fetchPengaduan}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm shadow"
         >
-          🔄 Refresh
+          Refresh
         </button>
       </div>
 

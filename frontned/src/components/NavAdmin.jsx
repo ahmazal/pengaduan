@@ -1,5 +1,9 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AiOutlineDashboard } from "react-icons/ai";
+import { TbReportAnalytics } from "react-icons/tb";
+import { IoAnalyticsOutline } from "react-icons/io5";
+import { CiUser } from "react-icons/ci";
 
 function NavAdmin() {
   const nav = useNavigate();
@@ -12,7 +16,7 @@ function NavAdmin() {
   return (
     <>
       {/* ======================== Sidebar ======================== */}
-      <aside className="w-64 bg-indigo-50 shadow-lg shadow-black p-6 flex flex-col fixed h-screen">
+      <aside className="w-64 bg-indigo-50 shadow-xl shadow-indigo-200 p-6 flex flex-col fixed h-screen">
         <button 
         onClick={() => nav("/")}
         className="text-2xl cursor-pointer font-bold text-indigo-800 mb-8 text-center">
@@ -21,37 +25,41 @@ function NavAdmin() {
 
         <nav className="flex flex-col gap-4">
           <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 bg-indigo-300 text-black hover:text-white transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
             onClick={() => nav("/admin/dashboard")}
           >
-            📊 Dashboard
+            <span><AiOutlineDashboard /></span> 
+            Dashboard
           </button>
 
           <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 bg-indigo-300 text-black hover:text-white transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
             onClick={() => nav("/admin/listAduan")}
           >
-            📝 Pengaduan
+            <span><TbReportAnalytics /></span>
+            Pengaduan
           </button>
 
           <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 bg-indigo-300 text-black hover:text-white transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
             onClick={() => nav("/admin/analytics")}
           >
-            📈 Analitik
+            <span><IoAnalyticsOutline /></span>
+            Analitik
           </button>
 
           <button
-            className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 bg-indigo-300 text-black hover:text-white transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
             onClick={() => nav("/admin/profil")}
           >
-            👤 Profil
+            <span><CiUser /></span>
+            Profil
           </button>
         </nav>
 
         <button
           onClick={logout}
-          className="mt-auto bg-red-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition"
+          className="mt-auto bg-red-500 cursor-pointer text-white py-2 px-6 rounded-lg hover:bg-red-600 transition"
         >
           Logout
         </button>

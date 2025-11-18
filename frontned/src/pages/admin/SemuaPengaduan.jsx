@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 import apiClient from "../../api/apiClient";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import NavAdmin from "../../components/NavAdmin";
 import StatusModal from "../../components/StatusModal";
+import { deleteInvalidPengaduan } from "../../services/api";
 
 function SemuaPengaduan() {
   const nav = useNavigate();
@@ -16,40 +18,16 @@ function SemuaPengaduan() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPengaduan, setSelectedPengaduan] = useState(null);
 
-  const logout = () => {
-    localStorage.clear();
-    nav("/login");
-  };
-
   const handleOpenModal = (p) => {
     setSelectedPengaduan(p);
     setIsModalOpen(true);
   };
 
-  const handleStatusChange = async (id_pengaduan, newStatus) => {
-    try {
-      const token = localStorage.getItem("token");
-      await apiClient.put(`/pengaduan/${id_pengaduan}/status`, 
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      // Update local state
-      const updatedPengaduan = pengaduan.map(p =>
-        p.id_pengaduan === id_pengaduan ? { ...p, status: newStatus } : p
-      );
-      setPengaduan(updatedPengaduan);
-      setFilteredPengaduan(updatedPengaduan);
-    } catch (err) {
-      console.error("Gagal update status:", err);
-      throw err;
-    }
-  };
-
-  // Fetch semua pengaduan
+  // Fetch semua pengaduan (DIPERBAIKI UNTUK REFRESH DATA INSTAN)
   const fetchAllPengaduan = async () => {
     try {
       setLoading(true);
+      // Menggunakan apiClient (Axios) untuk GET data
       const res = await apiClient.get("/pengaduan");
 
       // Handle both old array format dan new object format
@@ -58,6 +36,9 @@ function SemuaPengaduan() {
         : res.data.payload || res.data.data || [];
 
       setPengaduan(finalData);
+
+      // PENTING: Set ulang filter/sort result dengan data mentah baru
+      // Ini akan memicu useEffect di bawah untuk memproses data baru.
       setFilteredPengaduan(finalData);
     } catch (err) {
       console.error("Gagal fetch:", err);
@@ -65,6 +46,72 @@ function SemuaPengaduan() {
       setFilteredPengaduan([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Handler untuk menghapus permanen laporan yang statusnya 'Tidak Valid'.
+   */
+  const handleDeleteInvalid = async (idPengaduan) => {
+    const confirmResult = await Swal.fire({
+      icon: "warning",
+      title: "Hapus Permanen Laporan?",
+      html: `<p>ID Laporan: <strong>${idPengaduan}</strong></p><p>Aksi ini tidak dapat dibatalkan dan foto akan dihapus dari server.</p>`,
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Ya, Hapus Permanen",
+      cancelButtonText: "Batal",
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    try {
+      // Panggil fungsi deleteInvalidPengaduan yang diimpor
+      await deleteInvalidPengaduan(idPengaduan);
+      
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: `Laporan ID ${idPengaduan} berhasil dihapus secara permanen.`,
+        confirmButtonColor: "#ea580c"
+      });
+      
+      // PENTING: Muat ulang data setelah penghapusan untuk memperbarui tabel
+      fetchAllPengaduan();
+    } catch (err) {
+      // Menangani error dari deleteInvalidPengaduan (berupa objek {status, message})
+      const errorMessage =
+        err.message ||
+        "Gagal menghapus laporan. Pastikan statusnya 'Tidak Valid' dan Anda memiliki hak akses.";
+      
+      Swal.fire({
+        icon: "error",
+        title: "Gagal Menghapus",
+        text: errorMessage,
+        confirmButtonColor: "#dc2626"
+      });
+    }
+  };
+
+  const handleStatusChange = async (id_pengaduan, newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+      await apiClient.put(
+        `/pengaduan/${id_pengaduan}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      fetchAllPengaduan();
+    } catch (err) {
+      console.error("Gagal update status:", err);
+      const errorMessage =
+        err.response?.data?.message || "Gagal memperbarui status.";
+      alert(errorMessage);
+      throw err;
     }
   };
 
@@ -308,13 +355,25 @@ function SemuaPengaduan() {
                           {p.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <button 
+                      <td className="px-6 py-4 text-sm flex space-x-2">
+                        {/* Tombol Lihat Detail */}
+                        <button
                           onClick={() => handleOpenModal(p)}
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs"
                         >
                           Lihat Detail
                         </button>
+
+                        {/* TOMBOL HAPUS PERMANEN HANYA UNTUK 'Tidak Valid' */}
+                        {p.status === "Tidak Valid" && (
+                          <button
+                            onClick={() => handleDeleteInvalid(p.id_pengaduan)}
+                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs"
+                            title="Hapus permanen laporan dan fotonya dari server"
+                          >
+                            Hapus Permanen
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const router = express.Router();
 const pool = require("../config/db");
 const response = require("../response");
@@ -16,8 +17,6 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
-
-// ==================== GET Endpoints ====================
 
 // GET semua pengaduan
 router.get("/", async (req, res) => {
@@ -130,6 +129,29 @@ router.put("/:id/status", auth, async (req, res) => {
       return response(400, null, "Status tidak valid", res);
     }
 
+    // Check if complaint is locked by user (if column exists)
+    try {
+      const [checkRows] = await pool.query(
+        'SELECT is_locked FROM pengaduan WHERE id_pengaduan = ?',
+        [id]
+      );
+      if (checkRows.length > 0 && checkRows[0].is_locked === 1) {
+        return response(
+          400,
+          null,
+          "Pengaduan sudah dikunci oleh pengguna. Status tidak dapat diubah.",
+          res
+        );
+      }
+    } catch (errCheck) {
+      // If column doesn't exist or other error, continue without lock enforcement
+      if (errCheck && String(errCheck).includes('Unknown column')) {
+        // ignore - DB doesn't have is_locked column
+      } else {
+        console.error('Error checking is_locked:', errCheck);
+      }
+    }
+
     // Update database
     const [result] = await pool.query(
       "UPDATE pengaduan SET status = ? WHERE id_pengaduan = ?",
@@ -149,6 +171,142 @@ router.put("/:id/status", auth, async (req, res) => {
   } catch (err) {
     console.error("Error update status:", err);
     return response(500, null, "Gagal update status pengaduan", res);
+  }
+});
+
+// ==================== DELETE Endpoints ====================
+
+router.delete("/:id/delete-invalid", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query(
+      "SELECT status, foto FROM pengaduan WHERE id_pengaduan = ?",
+      [id]
+    );
+    if (rows.length === 0) {
+      return response(404, null, "Pengaduan tidak ditemukan", res);
+    }
+    const { status: currentStatus, foto: fotoFilename } = rows[0];
+    if (currentStatus.trim() !== "Tidak Valid") {
+      return response(
+        400,
+        null,
+        "Hanya pengaduan dengan status 'Tidak Valid' yang dapat dihapus",
+        res
+      );
+    }
+    const [result] = await pool.query(
+      "DELETE FROM pengaduan WHERE id_pengaduan = ?",
+      [id]
+    );
+    if (result.affectedRows > 0) {
+      if (fotoFilename) {
+          const filePath = path.join(__dirname, "../uploads/", fotoFilename);
+        fs.unlink(filePath, (err) => {
+          if (err) {
+            console.error("Error menghapus file foto:", err);
+          }
+        });
+      }
+      return response(
+        200,
+        { id_pengaduan: id },
+        "Pengaduan tidak valid berhasil dihapus",
+        res
+      );
+    } else {
+      return response(
+        500,
+        null,
+        "Gagal menghapus pengaduan dari database (affected rows = 0)",
+        res
+      );
+    }
+  } catch (err) {
+    console.error("Error delete invalid pengaduan:", err);
+    return response(
+      500,
+      null,
+      "Gagal menghapus pengaduan tidak valid. (Kesalahan server)",
+      res
+    );
+  }
+});
+
+// USER endpoint: Tandai selesai / lock pengaduan (user confirms admin's 'Selesai')
+router.post('/:id/confirm-complete', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const nik = req.user.nik;
+
+    // Get current pengaduan (try including is_locked if present)
+    let rows;
+    let needMigration = false;
+    try {
+      const result = await pool.query(
+        'SELECT nik, status, is_locked FROM pengaduan WHERE id_pengaduan = ?',
+        [id]
+      );
+      rows = result[0];
+    } catch (errSelect) {
+      // If column is_locked doesn't exist, fall back and signal migration required
+      if (errSelect && String(errSelect).includes('Unknown column')) {
+        needMigration = true;
+        const result = await pool.query(
+          'SELECT nik, status FROM pengaduan WHERE id_pengaduan = ?',
+          [id]
+        );
+        rows = result[0];
+      } else {
+        throw errSelect;
+      }
+    }
+    if (rows.length === 0) {
+      return response(404, null, 'Pengaduan tidak ditemukan', res);
+    }
+
+    const pengaduan = rows[0];
+
+    // Only owner can confirm
+    if (String(pengaduan.nik) !== String(nik)) {
+      return response(403, null, 'Anda tidak berhak melakukan aksi ini', res);
+    }
+
+    // Must be in 'Selesai' status
+    if (pengaduan.status !== 'Selesai') {
+      return response(400, null, "Hanya pengaduan dengan status 'Selesai' dapat ditandai selesai oleh pengguna", res);
+    }
+
+    // If migration is required (columns missing), return helpful message
+    if (needMigration) {
+      const migrationSql = `ALTER TABLE pengaduan\n  ADD COLUMN is_locked TINYINT(1) NOT NULL DEFAULT 0,\n  ADD COLUMN tanggal_tandai_selesai DATETIME NULL;`;
+      return response(
+        400,
+        null,
+        `Kolom 'is_locked' / 'tanggal_tandai_selesai' belum ada di tabel pengaduan. Silakan jalankan SQL migrasi berikut:\n${migrationSql}`,
+        res
+      );
+    }
+
+    // Check if already locked
+    if (pengaduan.is_locked === 1) {
+      return response(400, null, 'Pengaduan sudah ditandai selesai sebelumnya', res);
+    }
+
+    // Update to lock and set tanggal_tandai_selesai
+    const [updateResult] = await pool.query(
+      "UPDATE pengaduan SET is_locked = 1, tanggal_tandai_selesai = NOW() WHERE id_pengaduan = ?",
+      [id]
+    );
+
+    if (updateResult.affectedRows === 0) {
+      return response(500, null, 'Gagal menandai selesai pengaduan', res);
+    }
+
+    return response(200, { id_pengaduan: id }, 'Pengaduan berhasil ditandai selesai oleh pengguna', res);
+  } catch (err) {
+    console.error('Error confirm-complete:', err);
+    return response(500, null, 'Gagal menandai selesai pengaduan. (Kesalahan server)', res);
   }
 });
 

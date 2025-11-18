@@ -169,12 +169,13 @@ export default function FormPengaduan() {
             <div className="relative group">
               <FileText className="absolute left-4 top-4 text-orange-500" size={22} />
               <input
+                id="judul"
                 type="text"
                 value={filled.judul}
                 onChange={(e) => setFilled({ ...filled, judul: e.target.value })}
                 className="w-full border border-gray-300 rounded-xl p-4 pl-12 focus:ring-orange-200"
               />
-              <label className={`absolute left-12 bg-white px-1 transition-all 
+              <label htmlFor="judul" className={`absolute left-12 bg-white px-1 transition-all 
                 ${filled.judul ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"}`}>
                 Judul Pengaduan
               </label>
@@ -185,26 +186,15 @@ export default function FormPengaduan() {
               <Calendar className="absolute left-4 top-4 text-orange-500" size={22} />
               <input
                 type="date"
+                id="date"
                 value={filled.tanggal}
                 onChange={(e) => setFilled({ ...filled, tanggal: e.target.value })}
                 className="w-full border border-gray-300 rounded-xl p-4 pl-12"
               />
-              <label className={`absolute left-12 bg-white px-1 transition-all
+              <label htmlFor="date" className={`absolute left-12 bg-white px-1 transition-all
                 ${filled.tanggal ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"}`}>
                 Tanggal Pengaduan
               </label>
-            </div>
-
-            {/* KATEGORI (disabling sesuai kode asli) */}
-            <div className="relative">
-              <Layers className="absolute left-4 top-4 text-orange-500" size={22} />
-              <input
-                type="text"
-                placeholder="Kategori (opsional)"
-                className="w-full border border-gray-300 rounded-xl p-4 pl-12"
-                disabled
-              />
-              <p className="text-xs text-gray-400 mt-1">Kategori akan diatur oleh admin</p>
             </div>
 
             {/* ISI */}
@@ -213,10 +203,11 @@ export default function FormPengaduan() {
               <textarea
                 rows="5"
                 value={filled.isi}
+                id="desk"
                 onChange={(e) => setFilled({ ...filled, isi: e.target.value })}
                 className="w-full border border-gray-300 rounded-xl p-4 pl-12"
               ></textarea>
-              <label className={`absolute left-12 bg-white px-1 transition-all
+              <label htmlFor="desk" className={`absolute left-12 bg-white px-1 transition-all
                 ${filled.isi ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"}`}>
                 Isi Pengaduan
               </label>
@@ -253,7 +244,7 @@ export default function FormPengaduan() {
               <button
                 type="button"
                 onClick={handleOpenGoogleMaps}
-                className="absolute right-4 top-4 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+                className="cursor-pointer absolute right-4 top-2.5 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
               >
                 Buka Google Maps
               </button>
@@ -263,14 +254,14 @@ export default function FormPengaduan() {
             <div className="flex justify-end gap-4 pt-4">
               <button
                 onClick={() => setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" })}
-                className="px-6 py-3 border rounded-xl"
+                className="cursor-pointer px-6 py-3 border rounded-xl"
               >
                 Reset
               </button>
 
               <button
                 onClick={handleSubmit}
-                className="px-8 py-3 bg-orange-600 text-white rounded-xl"
+                className="cursor-pointer px-8 py-3 bg-orange-600 text-white rounded-xl"
               >
                 Kirim Pengaduan
               </button>

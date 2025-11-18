@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
+import Swal from "sweetalert2";
 import NavUser from "../../components/NavUser";
 
 export default function ListAduan() {
@@ -37,6 +38,38 @@ export default function ListAduan() {
 
     fetchPengaduan();
   }, []);
+
+  const handleConfirmComplete = async (id) => {
+    try {
+      const confirm = await Swal.fire({
+        title: "Tandai selesai",
+        text: "Anda yakin ingin menandai pengaduan ini sebagai selesai? Aksi ini akan mengunci pengaduan.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Ya, tandai selesai",
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      const res = await apiClient.post(`/pengaduan/${id}/confirm-complete`);
+      // handle response wrapper
+      const data = res.data || res;
+      Swal.fire({ icon: "success", text: data.message || "Berhasil ditandai selesai" });
+      // refresh list
+      setLoading(true);
+      const r = await apiClient.get("/masyarakat/pengaduan");
+      const pengaduan = Array.isArray(r.data)
+        ? r.data[0]?.payload || []
+        : (r.data.payload || r.data.data || []);
+      setComplaints(Array.isArray(pengaduan) ? pengaduan : []);
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message || err.message || "Gagal menandai selesai";
+      Swal.fire({ icon: "error", text: msg });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter dan sort pengaduan
   useEffect(() => {
@@ -197,6 +230,7 @@ export default function ListAduan() {
                     <th className="px-6 py-3 text-left font-semibold">Judul</th>
                     <th className="px-6 py-3 text-left font-semibold">Tanggal</th>
                     <th className="px-6 py-3 text-left font-semibold">Status</th>
+                    <th className="px-6 py-3 text-left font-semibold">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -223,6 +257,24 @@ export default function ListAduan() {
                         >
                           {complaint.status}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {complaint.status === "Selesai" ? (
+                          complaint.is_locked === 1 || complaint.is_locked === true ? (
+                            <div className="text-sm text-green-700">
+                              Dikunci • {complaint.tanggal_tandai_selesai ? formatDate(complaint.tanggal_tandai_selesai) : "-"}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleConfirmComplete(complaint.id_pengaduan)}
+                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                            >
+                              Tandai Selesai
+                            </button>
+                          )
+                        ) : (
+                          <div className="text-sm text-gray-600">-</div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -254,6 +306,22 @@ export default function ListAduan() {
                   <p className="text-sm text-gray-600">
                     Tanggal: {formatDate(complaint.tgl_pengaduan)}
                   </p>
+                  <div className="mt-3">
+                    {complaint.status === "Selesai" ? (
+                      complaint.is_locked === 1 || complaint.is_locked === true ? (
+                        <div className="text-sm text-green-700">
+                          Dikunci • {complaint.tanggal_tandai_selesai ? formatDate(complaint.tanggal_tandai_selesai) : "-"}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleConfirmComplete(complaint.id_pengaduan)}
+                          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                        >
+                          Tandai Selesai
+                        </button>
+                      )
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>

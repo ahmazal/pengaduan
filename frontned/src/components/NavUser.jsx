@@ -1,5 +1,6 @@
-import React from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Menu, Gauge, FileText, Clock, User, LogOut } from "lucide-react";
 
 export default function NavUser() {
   const nav = useNavigate();
@@ -9,50 +10,86 @@ export default function NavUser() {
     nav("/login");
   };
 
-  return (
-    <aside className="min-w-64 bg-indigo-50 shadow-lg shadow-black p-6 flex flex-col min-h-screen fixed">
-      <button 
-      onClick={() => nav("/")}
-      className="text-2xl cursor-pointer font-bold text-indigo-800 mb-8 white bg-indigo-300-center">
-        Masyarakat
-      </button>
+  const [open, setOpen] = useState(true);
 
-      <nav className="flex flex-col gap-4 text-white">
+  const hoverItem =
+    "hover:bg-indigo-200/60 hover:scale-[1.02] cursor-pointer transition-all duration-200";
+
+  return (
+    <>
+    
+    <aside
+      className={`fixed top-0 left-0 h-screen bg-indigo-50 text-slate-900 flex flex-col transition-all duration-300 shadow-xl shadow-indigo-400 pb-8 ${
+        open ? "w-64 px-4" : "w-20 px-2"
+      }`}
+    >
+      {/* Header */}
+      <div className="relative py-6 w-full">
+        {/* Toggle */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-gray-200/60 cursor-pointer transition"
+        >
+          <Menu size={26} />
+        </button>
+
+        {/* Judul */}
+        <div className="text-center">
+          {open && (
+            <button
+              onClick={() => nav("/")}
+              className="font-bold text-indigo-800 tracking-wide text-xl hover:brightness-110 cursor-pointer transition"
+            >
+              Masyarakat
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="mt-4 flex flex-col gap-3">
         <button
           onClick={() => nav("/user/dashboard")}
-          className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 hover:text-white text-black bg-indigo-300 transition"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg shadow ${hoverItem}`}
         >
-          📊 Dashboard
+          <Gauge size={20} />
+          {open && <span>Dashboard</span>}
         </button>
 
         <button
           onClick={() => nav("/user/buatpengaduan")}
-          className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 hover:text-white text-black bg-indigo-300 transition"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg shadow ${hoverItem}`}
         >
-          📝 Buat Pengaduan
+          <FileText size={20} />
+          {open && <span>Buat Pengaduan</span>}
         </button>
 
         <button
           onClick={() => nav("/user/riwayat")}
-          className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 hover:text-white text-black bg-indigo-300 transition"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg shadow ${hoverItem}`}
         >
-          📋 Riwayat Pengaduan
+          <Clock size={20} />
+          {open && <span>Riwayat Pengaduan</span>}
         </button>
 
         <button
           onClick={() => nav("/user/profil")}
-          className="text-left px-4 py-2 rounded-lg hover:bg-indigo-800 hover:text-white text-black bg-indigo-300 transition"
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg shadow ${hoverItem}`}
         >
-          👤 Profil
+          <User size={20} />
+          {open && <span>Profil</span>}
         </button>
       </nav>
 
+      {/* Logout */}
       <button
         onClick={logout}
-        className="mt-auto bg-red-500 text-white py-2 px-6 rounded-lg hover:bg-red-600 transition"
+        className="mt-auto flex justify-center items-center gap-3 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 hover:scale-[1.02] cursor-pointer transition-all"
       >
-        Logout
+        <LogOut size={20} />
+        {open && <span>Logout</span>}
       </button>
     </aside>
+    </>
   );
 }
