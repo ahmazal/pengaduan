@@ -1,9 +1,26 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, Search, Filter } from "lucide-react";
+import { ChevronLeft, Search, Filter, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 import apiClient from "../../api/apiClient";
 import Swal from "sweetalert2";
 import NavUser from "../../components/NavUser";
+
+// Fungsi bantu ambil foto bukti dari server (ubah ke base64)
+const getBase64FromUrl = async (url) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error("Gagal load gambar:", err);
+    return null;
+  }
+};
 
 export default function ListAduan() {
   const nav = useNavigate();
@@ -108,6 +125,96 @@ export default function ListAduan() {
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString("id-ID", options);
+  };
+
+  // Fungsi download PDF elegan
+  const handleDownloadOnePDF = async (p) => {
+    const doc = new jsPDF();
+    const orange = [230, 120, 30];
+    const gray = [80, 80, 80];
+
+    // Header oranye
+    doc.setFillColor(...orange);
+    doc.rect(0, 0, 210, 30, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("LAPORAN PENGADUAN MASYARAKAT", 105, 18, { align: "center" });
+
+    // Tanggal cetak
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...gray);
+    doc.setFontSize(11);
+    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`, 14, 40);
+
+    const data = [
+      ["ID Pengaduan", `#${p.id_pengaduan}`],
+      ["NIK Pelapor", p.nik || "-"],
+      ["Nama Pelapor", p.nama || "-"],
+      ["Tanggal Pengaduan", formatDate(p.tgl_pengaduan)],
+      ["Status", p.status || "-"],
+      ["Judul Pengaduan", p.judul_pengaduan || "-"],
+      ["Isi Laporan", p.isi_laporan || p.isi || "-"],
+    ];
+
+    let y = 55;
+    let contentHeight = 0;
+    data.forEach(([label, value]) => {
+      const lines = doc.splitTextToSize(value, 120);
+      contentHeight += 10 + (lines.length - 1) * 5;
+    });
+    const hasPhoto = !!p.foto;
+    if (hasPhoto) contentHeight += 80;
+    const boxHeight = contentHeight + 20;
+
+    doc.setDrawColor(...orange);
+    doc.roundedRect(10, 45, 190, boxHeight, 3, 3);
+
+    data.forEach(([label, value]) => {
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...orange);
+      doc.text(`${label}:`, 16, y);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
+      const lines = doc.splitTextToSize(value, 120);
+      doc.text(lines, 70, y);
+      y += 10 + (lines.length - 1) * 5;
+    });
+
+    // Tambahkan foto bukti (jika ada)
+    if (hasPhoto) {
+      const imageUrl = `http://localhost:5000/uploads/${p.foto}`;
+      const base64Image = await getBase64FromUrl(imageUrl);
+      if (base64Image) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...orange);
+        doc.text("Foto Bukti:", 16, y + 10);
+        doc.addImage(base64Image, "JPEG", 16, y + 15, 70, 50);
+        y += 70;
+      }
+    }
+
+    // Footer tanda tangan
+    doc.setDrawColor(...orange);
+    doc.line(10, 45 + boxHeight + 10, 200, 45 + boxHeight + 10);
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(10);
+    doc.setTextColor(...gray);
+    doc.text("Mengetahui,", 140, 45 + boxHeight + 25);
+    doc.text("Pelapor", 140, 45 + boxHeight + 55);
+    doc.line(140, 45 + boxHeight + 56, 190, 45 + boxHeight + 56);
+
+    // Footer kecil
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      "Sistem Pelaporan Pengaduan Masyarakat - Generated Automatically",
+      105,
+      285,
+      { align: "center" }
+    );
+
+    doc.save(`laporan_pengaduan_${p.id_pengaduan}.pdf`);
   };
 
   return (
@@ -225,12 +332,12 @@ export default function ListAduan() {
               <table className="w-full">
                 <thead className="bg-gray-200 text-gray-700">
                   <tr>
-                    <th className="px-6 py-3 text-left font-semibold">#</th>
-                    <th className="px-6 py-3 text-left font-semibold">NIK</th>
-                    <th className="px-6 py-3 text-left font-semibold">Judul</th>
-                    <th className="px-6 py-3 text-left font-semibold">Tanggal</th>
-                    <th className="px-6 py-3 text-left font-semibold">Status</th>
-                    <th className="px-6 py-3 text-left font-semibold">Aksi</th>
+                    <th className="px-6 py-3 text-center font-semibold">No</th>
+                    <th className="px-6 py-3 text-center font-semibold">NIK</th>
+                    <th className="px-6 py-3 text-center font-semibold">Judul</th>
+                    <th className="px-6 py-3 text-center font-semibold">Tanggal</th>
+                    <th className="px-6 py-3 text-center font-semibold">Status</th>
+                    <th className="px-6 py-3 text-center font-semibold">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,22 +366,32 @@ export default function ListAduan() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {complaint.status === "Selesai" ? (
-                          complaint.is_locked === 1 || complaint.is_locked === true ? (
-                            <div className="text-sm text-green-700">
-                              Dikunci • {complaint.tanggal_tandai_selesai ? formatDate(complaint.tanggal_tandai_selesai) : "-"}
-                            </div>
+                        <div className="flex flex-col gap-2 items-center flex-wrap">
+                          {complaint.status === "Selesai" ? (
+                            complaint.is_locked === 1 || complaint.is_locked === true ? (
+                              <div className="text-sm text-green-700">
+                                Dikunci • {complaint.tanggal_tandai_selesai ? formatDate(complaint.tanggal_tandai_selesai) : "-"}
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleConfirmComplete(complaint.id_pengaduan)}
+                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                              >
+                                Tandai Selesai
+                              </button>
+                            )
                           ) : (
-                            <button
-                              onClick={() => handleConfirmComplete(complaint.id_pengaduan)}
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                            >
-                              Tandai Selesai
-                            </button>
-                          )
-                        ) : (
-                          <div className="text-sm text-gray-600">-</div>
-                        )}
+                            <div className="text-sm text-gray-600">-</div>
+                          )}
+                          <button
+                            onClick={() => handleDownloadOnePDF(complaint)}
+                            className="flex items-center gap-1 px-3 py-1 bg-blue-700 text-white rounded-md hover:bg-indigo-700 text-sm font-medium transition-all whitespace-nowrap"
+                            title="Download PDF"
+                          >
+                            <Download size={16} />
+                            Download
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -306,7 +423,7 @@ export default function ListAduan() {
                   <p className="text-sm text-gray-600">
                     Tanggal: {formatDate(complaint.tgl_pengaduan)}
                   </p>
-                  <div className="mt-3">
+                  <div className="mt-3 flex flex-col gap-2">
                     {complaint.status === "Selesai" ? (
                       complaint.is_locked === 1 || complaint.is_locked === true ? (
                         <div className="text-sm text-green-700">
@@ -321,6 +438,14 @@ export default function ListAduan() {
                         </button>
                       )
                     ) : null}
+                    <button
+                      onClick={() => handleDownloadOnePDF(complaint)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium transition-all"
+                      title="Download PDF"
+                    >
+                      <Download size={18} />
+                      Download PDF
+                    </button>
                   </div>
                 </div>
               ))}

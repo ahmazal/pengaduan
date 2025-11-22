@@ -3,9 +3,27 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import apiClient from "../../api/apiClient";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Download } from "lucide-react";
+import jsPDF from "jspdf";
 import NavAdmin from "../../components/NavAdmin";
 import StatusModal from "../../components/StatusModal";
 import { deleteInvalidPengaduan } from "../../services/api";
+
+// Fungsi bantu untuk mengambil foto dari URL dan ubah ke Base64
+const getBase64FromUrl = async (url) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error("Gagal load gambar:", err);
+    return null;
+  }
+};
 
 function SemuaPengaduan() {
   const nav = useNavigate();
@@ -113,6 +131,99 @@ function SemuaPengaduan() {
       alert(errorMessage);
       throw err;
     }
+  };
+
+  // Fungsi Stylish PDF Laporan Detail (foto di dalam kotak)
+  const handleDownloadOnePDF = async (p) => {
+    const doc = new jsPDF();
+    const orange = [230, 120, 30];
+    const gray = [80, 80, 80];
+
+    // Header oranye
+    doc.setFillColor(...orange);
+    doc.rect(0, 0, 210, 30, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("LAPORAN PENGADUAN MASYARAKAT", 105, 18, { align: "center" });
+
+    // Tanggal cetak
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...gray);
+    doc.setFontSize(11);
+    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`, 14, 40);
+
+    doc.setFontSize(12);
+    const startY = 50;
+    let y = startY;
+
+    const data = [
+      ["ID Pengaduan", `#${p.id_pengaduan}`],
+      ["NIK Pelapor", p.nik || "-"],
+      ["Nama Pelapor", p.nama || "-"],
+      ["Tanggal Pengaduan", new Date(p.tgl_pengaduan).toLocaleDateString("id-ID")],
+      ["Status", p.status || "-"],
+      ["Judul Pengaduan", p.judul_pengaduan || "-"],
+      ["Isi Laporan", p.isi_laporan || p.isi || "-"],
+    ];
+
+    let contentHeight = 0;
+    data.forEach(([label, value]) => {
+      const lines = doc.splitTextToSize(value, 120);
+      contentHeight += 10 + (lines.length - 1) * 5;
+    });
+
+    const hasPhoto = !!p.foto;
+    if (hasPhoto) contentHeight += 80;
+
+    const boxHeight = contentHeight + 20;
+    doc.setDrawColor(...orange);
+    doc.roundedRect(10, 45, 190, boxHeight, 3, 3);
+
+    y = 55;
+    data.forEach(([label, value]) => {
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...orange);
+      doc.text(`${label}:`, 16, y);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
+      const lines = doc.splitTextToSize(value, 120);
+      doc.text(lines, 70, y);
+      y += 10 + (lines.length - 1) * 5;
+    });
+
+    if (hasPhoto) {
+      const imageUrl = `http://localhost:5000/uploads/${p.foto}`;
+      const base64Image = await getBase64FromUrl(imageUrl);
+      if (base64Image) {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...orange);
+        doc.text("Foto Bukti:", 16, y + 10);
+        doc.addImage(base64Image, "JPEG", 16, y + 15, 70, 50);
+        y += 70;
+      }
+    }
+
+    doc.setDrawColor(...orange);
+    doc.line(10, 45 + boxHeight + 10, 200, 45 + boxHeight + 10);
+
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(10);
+    doc.setTextColor(...gray);
+    doc.text("Mengetahui,", 140, 45 + boxHeight + 25);
+    doc.text("Petugas Penerima", 140, 45 + boxHeight + 55);
+    doc.line(140, 45 + boxHeight + 56, 190, 45 + boxHeight + 56);
+
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      "Sistem Pelaporan Pengaduan Masyarakat - Generated Automatically",
+      105,
+      285,
+      { align: "center" }
+    );
+
+    doc.save(`laporan_pengaduan_${p.id_pengaduan}.pdf`);
   };
 
   useEffect(() => {
@@ -334,19 +445,19 @@ function SemuaPengaduan() {
                       key={p.id_pengaduan}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
-                      <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                      <td className="px-3 py-2 text-sm text-gray-700 font-medium">
                         #{p.id_pengaduan}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-gray-700">
                         {p.nik}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate">
+                      <td className="px-3 py-2 text-sm text-gray-700 max-w-xs truncate">
                         {p.judul_pengaduan}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-3 py-2 text-sm text-gray-600">
                         {formatDate(p.tgl_pengaduan)}
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-3 py-2 text-sm">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
                             p.status
@@ -355,20 +466,30 @@ function SemuaPengaduan() {
                           {p.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm flex space-x-2">
+                      <td className="px-3 py-4 flex-col text-sm flex gap-2 flex-wrap">
                         {/* Tombol Lihat Detail */}
                         <button
                           onClick={() => handleOpenModal(p)}
-                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs"
+                          className="px-3 py-1 bg-blue-500 text-white rounded shadow hover:bg-blue-700 transition text-xs"
                         >
                           Lihat Detail
+                        </button>
+
+                        {/* Tombol Download PDF */}
+                        <button
+                          onClick={() => handleDownloadOnePDF(p)}
+                          className="flex justify-center items-center gap-1 px-3 py-1 bg-green-500 text-white rounded shadow hover:bg-green-700 transition text-xs"
+                          title="Download PDF"
+                        >
+                          <Download size={14} />
+                          Download
                         </button>
 
                         {/* TOMBOL HAPUS PERMANEN HANYA UNTUK 'Tidak Valid' */}
                         {p.status === "Tidak Valid" && (
                           <button
                             onClick={() => handleDeleteInvalid(p.id_pengaduan)}
-                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs"
+                            className="px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-700 transition text-xs"
                             title="Hapus permanen laporan dan fotonya dari server"
                           >
                             Hapus Permanen
