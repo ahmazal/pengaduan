@@ -16,7 +16,7 @@ function NavAdmin() {
   return (
     <>
       {/* ======================== Sidebar ======================== */}
-      <aside className="w-64 bg-indigo-50 shadow-xl shadow-indigo-200 p-6 flex flex-col fixed h-screen">
+      <aside className="w-64 bg-indigo-50 shadow-xl hover:shadow-indigo-200 p-6 flex flex-col fixed h-screen">
         <button 
         onClick={() => nav("/")}
         className="text-2xl cursor-pointer font-bold text-indigo-800 mb-8 text-center">
@@ -25,7 +25,7 @@ function NavAdmin() {
 
         <nav className="flex flex-col gap-4">
           <button
-            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-100 hover:shadow text-black transition"
             onClick={() => nav("/admin/dashboard")}
           >
             <span><AiOutlineDashboard /></span> 
@@ -33,7 +33,7 @@ function NavAdmin() {
           </button>
 
           <button
-            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-100 hover:shadow text-black transition"
             onClick={() => nav("/admin/listAduan")}
           >
             <span><TbReportAnalytics /></span>
@@ -41,7 +41,7 @@ function NavAdmin() {
           </button>
 
           <button
-            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-100 hover:shadow text-black transition"
             onClick={() => nav("/admin/analytics")}
           >
             <span><IoAnalyticsOutline /></span>
@@ -49,8 +49,8 @@ function NavAdmin() {
           </button>
 
           <button
-            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-200 shadow text-black transition"
-            onClick={() => nav("/admin/profil")}
+            className="text-left flex items-center gap-4 cursor-pointer px-4 py-2 rounded-lg hover:bg-indigo-100 hover:shadow text-black transition"
+            onClick={() => nav("/admin/profile")}
           >
             <span><CiUser /></span>
             Profil

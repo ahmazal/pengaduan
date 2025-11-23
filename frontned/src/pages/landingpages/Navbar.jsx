@@ -67,8 +67,8 @@ function Navbar() {
 
   return (
     <div className={`w-full z-30 fixed ${isActive ? "-translate-y-full" : "translate-y-0"} duration-300`}>
-      <div className="px-4 py-2 flex justify-between items-center backdrop-blur-sm">
-        <div>
+      <div className="px-4 py-2 flex justify-between items-center bg-zinc-100 rounded-b-2xl backdrop-blur-sm">
+        <div className="bg-white shadow rounded-full px-4 py-2">
           <h2 className="text-xl text-amber-500 font-bold">LaporKang</h2>
         </div>
 

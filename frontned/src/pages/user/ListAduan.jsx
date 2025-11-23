@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import apiClient from "../../api/apiClient";
 import Swal from "sweetalert2";
 import NavUser from "../../components/NavUser";
+import { FaWpforms } from "react-icons/fa6";
 
 // Fungsi bantu ambil foto bukti dari server (ubah ke base64)
 const getBase64FromUrl = async (url) => {
@@ -22,6 +23,17 @@ const getBase64FromUrl = async (url) => {
   }
 };
 
+function DetailItem({ label, value, multiline }) {
+  return (
+    <div className="border p-3 rounded bg-gray-50">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className={`mt-1 text-gray-800 ${multiline ? "whitespace-pre-wrap" : ""}`}>
+        {value ?? "-"}
+      </div>
+    </div>
+  );
+}
+
 export default function ListAduan() {
   const nav = useNavigate();
   const [complaints, setComplaints] = useState([]);
@@ -31,6 +43,182 @@ export default function ListAduan() {
   const [searchNik, setSearchNik] = useState("");
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [sortBy, setSortBy] = useState("terbaru");
+
+  // === modal detail & edit state (dari fitur yang diminta) ===
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState(null);
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    id_pengaduan: null,
+    nik: "",
+    judul_pengaduan: "",
+    tgl_pengaduan: "",
+    status: "Menunggu",
+    isi_laporan: "",
+    foto: null,
+    fotoPreview: null,
+  });
+  const [editErrors, setEditErrors] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [fileError, setFileError] = useState("");
+
+  const openDetailModal = (item) => {
+    setSelectedComplaint(item);
+    setIsModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setSelectedComplaint(null);
+    setIsModalOpen(false);
+  };
+
+  const openEditFromDetail = () => {
+    if (!selectedComplaint) return;
+    setEditForm({
+      id_pengaduan: selectedComplaint.id_pengaduan,
+      nik: selectedComplaint.nik || "",
+      judul_pengaduan: selectedComplaint.judul_pengaduan || "",
+      tgl_pengaduan: selectedComplaint.tgl_pengaduan || selectedComplaint.created_at || "",
+      status: selectedComplaint.status || "Menunggu",
+      isi_laporan: selectedComplaint.isi_laporan || "",
+      foto: null,
+      fotoPreview: selectedComplaint.foto ? `http://localhost:5000/uploads/${selectedComplaint.foto}` : null,
+    });
+    setEditErrors({});
+    setFileError("");
+    setIsEditOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditOpen(false);
+    setEditForm((f) => ({ ...f, foto: null }));
+    setFileError("");
+  };
+
+  // file select handler for edit
+  function handleFileSelect(e) {
+    setFileError("");
+    const f = e.target.files && e.target.files[0];
+    if (!f) {
+      setEditForm((s) => ({ ...s, foto: null, fotoPreview: null }));
+      return;
+    }
+    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    if (!allowed.includes(f.type)) {
+      setFileError("Tipe file tidak valid. Hanya gambar (jpg/png/gif/webp).");
+      return;
+    }
+    const maxBytes = 5 * 1024 * 1024;
+    if (f.size > maxBytes) {
+      setFileError("Ukuran file terlalu besar. Maksimum 5 MB.");
+      return;
+    }
+    // set file and preview
+    const url = URL.createObjectURL(f);
+    setEditForm((s) => ({ ...s, foto: f, fotoPreview: url }));
+  }
+
+  function handleEditChange(e) {
+    const { name, value } = e.target;
+    setEditForm((s) => ({ ...s, [name]: value }));
+    setEditErrors((prev) => ({ ...prev, [name]: undefined }));
+  }
+
+  function validateEdit(form) {
+    const errs = {};
+    if (!form.judul_pengaduan || form.judul_pengaduan.trim().length < 3) {
+      errs.judul_pengaduan = "Judul minimal 3 karakter.";
+    }
+    if (!form.tgl_pengaduan || form.tgl_pengaduan.trim() === "") {
+      errs.tgl_pengaduan = "Tanggal harus diisi.";
+    }
+    if (!form.isi_laporan || form.isi_laporan.trim().length < 5) {
+      errs.isi_laporan = "Isi laporan minimal 5 karakter.";
+    }
+    return errs;
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+    setFileError("");
+    const errs = validateEdit(editForm);
+    if (Object.keys(errs).length) {
+      setEditErrors(errs);
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      const id = editForm.id_pengaduan;
+      let res;
+      if (editForm.foto) {
+        const fd = new FormData();
+        fd.append("nik", editForm.nik);
+        fd.append("judul_pengaduan", editForm.judul_pengaduan);
+        fd.append("tgl_pengaduan", editForm.tgl_pengaduan);
+        fd.append("status", editForm.status);
+        fd.append("isi_laporan", editForm.isi_laporan);
+        fd.append("foto", editForm.foto);
+        res = await apiClient.put(`/masyarakat/pengaduan/${id}`, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        const payload = {
+          nik: editForm.nik,
+          judul_pengaduan: editForm.judul_pengaduan,
+          tgl_pengaduan: editForm.tgl_pengaduan,
+          status: editForm.status,
+          isi_laporan: editForm.isi_laporan,
+        };
+        res = await apiClient.put(`/masyarakat/pengaduan/${id}`, payload);
+      }
+
+      const updated =
+        (res && res.data && (res.data.payload || res.data.data || res.data)) ||
+        editForm;
+
+      const updatedObj = {
+        ...selectedComplaint,
+        ...updated,
+        id_pengaduan: updated.id_pengaduan ?? editForm.id_pengaduan,
+        judul_pengaduan: updated.judul_pengaduan ?? editForm.judul_pengaduan,
+        tgl_pengaduan: updated.tgl_pengaduan ?? editForm.tgl_pengaduan,
+        status: updated.status ?? editForm.status,
+        isi_laporan: updated.isi_laporan ?? editForm.isi_laporan,
+        foto: updated.foto ?? (editForm.foto && editForm.foto.name) ?? selectedComplaint.foto ?? null,
+      };
+
+      // Update local state: complaints and filteredComplaints
+      setComplaints((prev) =>
+        prev.map((it) =>
+          (it.id_pengaduan ?? it.id) === (updatedObj.id_pengaduan ?? editForm.id_pengaduan)
+            ? { ...it, ...updatedObj }
+            : it
+        )
+      );
+
+      setFilteredComplaints((prev) =>
+        prev.map((it) =>
+          (it.id_pengaduan ?? it.id) === (updatedObj.id_pengaduan ?? editForm.id_pengaduan)
+            ? { ...it, ...updatedObj }
+            : it
+        )
+      );
+
+      // update selected in modal
+      setSelectedComplaint((s) => ({ ...s, ...updatedObj }));
+
+      // close edit modal
+      setIsEditOpen(false);
+      setSavingEdit(false);
+    } catch (err) {
+      console.error("Error saving edit:", err);
+      setSavingEdit(false);
+      const msg = err?.response?.data?.message || "Gagal menyimpan perubahan.";
+      alert(msg);
+    }
+  }
 
   // Fetch semua pengaduan user
   useEffect(() => {
@@ -385,11 +573,21 @@ export default function ListAduan() {
                           )}
                           <button
                             onClick={() => handleDownloadOnePDF(complaint)}
-                            className="flex items-center gap-1 px-3 py-1 bg-blue-700 text-white rounded-md hover:bg-indigo-700 text-sm font-medium transition-all whitespace-nowrap"
+                            className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600 text-sm font-medium transition-all whitespace-nowrap"
                             title="Download PDF"
                           >
                             <Download size={16} />
                             Download
+                          </button>
+
+                          {/* Lihat Detail button (ditambahkan, tidak mengubah logika lain) */}
+                          <button
+                            onClick={() => openDetailModal(complaint)}
+                            className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-all whitespace-nowrap"
+                            title="Lihat Detail"
+                          >
+                            <FaWpforms />
+                            Lihat Detail
                           </button>
                         </div>
                       </td>
@@ -446,6 +644,15 @@ export default function ListAduan() {
                       <Download size={18} />
                       Download PDF
                     </button>
+
+                    {/* Lihat Detail mobile */}
+                    <button
+                      onClick={() => openDetailModal(complaint)}
+                      className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-all"
+                      title="Lihat Detail"
+                    >
+                      Lihat Detail
+                    </button>
                   </div>
                 </div>
               ))}
@@ -458,6 +665,226 @@ export default function ListAduan() {
           Menampilkan {filteredComplaints.length} dari {complaints.length} pengaduan
         </div>
       </main>
+
+      {/* ============== MODAL DETAIL (DIGABUNGKAN) ============== */}
+      {isModalOpen && selectedComplaint && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-6">
+
+          {/* Background Overlay */}
+          <div
+            className="absolute inset-0 bg-black/60 transition-opacity duration-200"
+            onClick={closeDetailModal}
+          />
+
+          {/* Modal Box */}
+          <div className="relative w-full max-w-3xl transform transition-all duration-200 opacity-100 scale-100">
+            <div className="bg-white rounded-xl shadow-2xl overflow-auto max-h-[90vh]">
+
+              {/* Header */}
+              <div className="p-6 border-b flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-800">
+                    Detail Pengaduan #{selectedComplaint.id_pengaduan ?? ""}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    NIK: {selectedComplaint.nik ?? "-"}
+                  </p>
+                </div>
+
+                {/* Only top close button */}
+                <button
+                  onClick={closeDetailModal}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Tutup
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  {/* ----------- KIRI: Foto + Status + Lokasi ----------- */}
+                  <div className="space-y-4">
+
+                    {/* Foto */}
+                    {selectedComplaint.foto ? (
+                      <img
+                        src={`http://localhost:5000/uploads/${selectedComplaint.foto}`}
+                        alt={selectedComplaint.judul_pengaduan || "Foto pengaduan"}
+                        className="w-full h-64 object-cover rounded-md border"
+                        onError={(e) => { e.currentTarget.src = ""; }}
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 border">
+                        Tidak ada foto
+                      </div>
+                    )}
+
+                    {/* Status + Tanggal */}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(
+                          selectedComplaint.status
+                        )}`}
+                      >
+                        {selectedComplaint.status}
+                      </span>
+
+                      <div className="text-sm text-gray-600">
+                        {selectedComplaint.tgl_pengaduan
+                          ? formatDate(selectedComplaint.tgl_pengaduan)
+                          : (selectedComplaint.created_at ?? "-")}
+                      </div>
+                    </div>
+
+                    {/* Lokasi */}
+                    <div>
+                      <h4 className="text-sm text-gray-500">Lokasi</h4>
+                      <p className="text-gray-800">{selectedComplaint.lokasi || "-"}</p>
+                    </div>
+                  </div>
+
+                  {/* ----------- KANAN: Detail Informasi ----------- */}
+                  <div className="space-y-4">
+
+                    <div className="border p-3 rounded bg-gray-50">
+                      <div className="text-xs text-gray-500">ID Pengaduan</div>
+                      <div className="mt-1 text-gray-800">
+                        {selectedComplaint.id_pengaduan ?? "-"}
+                      </div>
+                    </div>
+
+                    <div className="border p-3 rounded bg-gray-50">
+                      <div className="text-xs text-gray-500">Judul Pengaduan</div>
+                      <div className="mt-1 text-gray-800">
+                        {selectedComplaint.judul_pengaduan}
+                      </div>
+                    </div>
+
+                    <div className="border p-3 rounded bg-gray-50">
+                      <div className="text-xs text-gray-500">Isi Laporan</div>
+                      <div className="mt-1 text-gray-800 whitespace-pre-wrap">
+                        {selectedComplaint.isi_laporan}
+                      </div>
+                    </div>
+
+                    <div className="border p-3 rounded bg-gray-50">
+                      <div className="text-xs text-gray-500">Foto (filename)</div>
+                      <div className="mt-1 text-gray-800">{selectedComplaint.foto || "-"}</div>
+                    </div>
+
+                    <div className="border p-3 rounded bg-gray-50">
+                      <div className="text-xs text-gray-500">Created At</div>
+                      <div className="mt-1 text-gray-800">{selectedComplaint.created_at || "-"}</div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer: Edit button bottom-right */}
+              <div className="p-4 border-t flex justify-end">
+                <button
+                  onClick={openEditFromDetail}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                >
+                  Edit
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ============== END MODAL DETAIL ============== */}
+
+      {/* ============== EDIT MODAL ============== */}
+      {isEditOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-6">
+          <div
+            className="absolute inset-0 bg-black/60 transition-opacity"
+            onClick={closeEditModal}
+          />
+
+          <div className="relative w-full max-w-2xl transform transition-all duration-200 opacity-100 scale-100">
+            <div className="bg-white rounded-xl shadow-2xl overflow-auto max-h-[90vh]">
+              <div className="p-6 border-b flex items-center justify-between">
+                <h3 className="text-xl font-semibold">Edit Pengaduan #{editForm.id_pengaduan}</h3>
+                <button onClick={closeEditModal} className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">Batal</button>
+              </div>
+
+              <form onSubmit={saveEdit} className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-600">NIK</label>
+                    <input readOnly value={editForm.nik} className="mt-1 w-full border border-gray-300 rounded px-3 py-2 bg-gray-50" />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-gray-600">Tanggal</label>
+                    <input
+                      name="tgl_pengaduan"
+                      value={editForm.tgl_pengaduan}
+                      disabled
+                      onChange={handleEditChange}
+                      className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                    />
+                    {editErrors.tgl_pengaduan && <p className="text-sm text-red-600 mt-1">{editErrors.tgl_pengaduan}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-600">Judul Pengaduan</label>
+                  <input
+                    name="judul_pengaduan"
+                    value={editForm.judul_pengaduan}
+                    onChange={handleEditChange}
+                    className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                  />
+                  {editErrors.judul_pengaduan && <p className="text-sm text-red-600 mt-1">{editErrors.judul_pengaduan}</p>}
+                </div>
+
+                <div>
+                  <h1 className="text-xs text-gray-600">Status</h1>
+                  <p>{editForm.status}</p>
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-600">Isi Laporan</label>
+                  <textarea
+                    name="isi_laporan"
+                    value={editForm.isi_laporan}
+                    onChange={handleEditChange}
+                    className="mt-1 w-full border border-gray-300 rounded px-3 py-2 min-h-[120px]"
+                  />
+                  {editErrors.isi_laporan && <p className="text-sm text-red-600 mt-1">{editErrors.isi_laporan}</p>}
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-600">Unggah Foto (opsional, max 5MB)</label>
+                  <input type="file" accept="image/*" onChange={handleFileSelect} className="mt-2" />
+                  {fileError && <p className="text-sm text-red-600 mt-1">{fileError}</p>}
+                  {editForm.fotoPreview && (
+                    <div className="mt-3">
+                      <div className="text-sm text-gray-700">Preview:</div>
+                      <img src={editForm.fotoPreview} alt="preview" className="max-h-36 rounded mt-2 border" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={closeEditModal} className="px-4 py-2 rounded border">Batal</button>
+                  <button type="submit" disabled={savingEdit} className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">
+                    {savingEdit ? "Menyimpan..." : "Simpan"}
+                  </button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ const router = express.Router();
 const pool = require("../config/db");
 const response = require("../response");
 const auth = require("../middleware/auth");
+const transporter = require("../config/mailer"); // harus export transporter
 
 // Konfigurasi Multer untuk upload foto
 const storage = multer.diskStorage({
@@ -17,6 +18,37 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage });
+
+// ----------------- Helper: kirim email (HTML sederhana, biru) -----------------
+async function sendEmailToUser(userEmail, subject, htmlContent) {
+  if (!userEmail) {
+    console.warn("sendEmailToUser: userEmail kosong, skip send");
+    return;
+  }
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject,
+      html: htmlContent,
+    });
+    console.log("Email dikirim ke:", userEmail, "subject:", subject);
+  } catch (err) {
+    console.error("Gagal mengirim email ke", userEmail, err);
+    // jangan lempar error ke caller supaya operasi utama tetap berhasil
+  }
+}
+
+// Helper untuk ambil email & nama user berdasarkan nik
+async function getUserByNik(nik) {
+  const [rows] = await pool.query(
+    "SELECT nik, nama, email FROM masyarakat WHERE nik = ?",
+    [nik]
+  );
+  return rows[0] || null;
+}
+
+// ----------------- Routes -----------------
 
 // GET semua pengaduan
 router.get("/", async (req, res) => {
@@ -64,12 +96,11 @@ router.get("/berita/completed", async (req, res) => {
   }
 });
 
-// ==================== POST Endpoints ====================
-
 // CREATE pengaduan baru (user)
 router.post("/", auth, upload.single("foto"), async (req, res) => {
   try {
-    const { nik, judul_pengaduan, tgl_pengaduan, isi_laporan, lokasi } = req.body;
+    const { nik, judul_pengaduan, tgl_pengaduan, isi_laporan, lokasi } =
+      req.body;
 
     // Validasi input
     if (!nik || !judul_pengaduan || !tgl_pengaduan || !isi_laporan || !lokasi) {
@@ -83,7 +114,12 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
     // Validasi NIK dari token
     const userNik = req.user.nik;
     if (nik !== userNik) {
-      return response(403, null, "NIK tidak sesuai dengan user yang login", res);
+      return response(
+        403,
+        null,
+        "NIK tidak sesuai dengan user yang login",
+        res
+      );
     }
 
     const foto = req.file.filename;
@@ -115,13 +151,17 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
   }
 });
 
-// ==================== PUT Endpoints ====================
-
-// UPDATE status pengaduan (admin only)
+// UPDATE status pengaduan (admin only) + kirim email notifikasi status
 router.put("/:id/status", auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+
+    // Optional: cek role admin (asumsi req.user.role ada)
+    if (req.user && req.user.role && req.user.role.toLowerCase() !== "admin") {
+      // jika kamu tidak pakai role, hapus blok ini
+      return response(403, null, "Hanya admin yang dapat mengubah status", res);
+    }
 
     // Validasi status
     const validStatus = ["Menunggu", "Diproses", "Selesai", "Tidak Valid"];
@@ -129,10 +169,10 @@ router.put("/:id/status", auth, async (req, res) => {
       return response(400, null, "Status tidak valid", res);
     }
 
-    // Check if complaint is locked by user (if column exists)
+    // Cek lock bila ada
     try {
       const [checkRows] = await pool.query(
-        'SELECT is_locked FROM pengaduan WHERE id_pengaduan = ?',
+        "SELECT is_locked FROM pengaduan WHERE id_pengaduan = ?",
         [id]
       );
       if (checkRows.length > 0 && checkRows[0].is_locked === 1) {
@@ -144,11 +184,10 @@ router.put("/:id/status", auth, async (req, res) => {
         );
       }
     } catch (errCheck) {
-      // If column doesn't exist or other error, continue without lock enforcement
-      if (errCheck && String(errCheck).includes('Unknown column')) {
-        // ignore - DB doesn't have is_locked column
+      if (errCheck && String(errCheck).includes("Unknown column")) {
+        // ignore
       } else {
-        console.error('Error checking is_locked:', errCheck);
+        console.error("Error checking is_locked:", errCheck);
       }
     }
 
@@ -162,6 +201,32 @@ router.put("/:id/status", auth, async (req, res) => {
       return response(404, null, "Pengaduan tidak ditemukan", res);
     }
 
+    // Ambil data pengaduan untuk info email
+    const [pengRows] = await pool.query(
+      "SELECT nik, judul_pengaduan FROM pengaduan WHERE id_pengaduan = ?",
+      [id]
+    );
+    const peng = pengRows[0];
+
+    // Ambil user email berdasarkan nik
+    const user = await getUserByNik(peng.nik);
+    const userEmail = user ? user.email : null;
+    const userName = user ? user.nama : peng.nama || "";
+
+    // Siapkan email HTML (biru)
+    const subject = `Status Laporan Anda: ${status}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; color:#222;">
+        <h2 style="color:#1e3a8a">Notifikasi Status Laporan</h2>
+        <p>Hai <strong>${userName}</strong>,</p>
+        <p>Status laporan Anda (<strong>${peng.judul_pengaduan}</strong>, ID: ${id}) telah diubah menjadi: <strong>${status}</strong>.</p>
+        <p>Terima kasih telah menggunakan layanan pengaduan.</p>
+      </div>
+    `;
+
+    // Kirim email (jangan blokir response jika gagal)
+    await sendEmailToUser(userEmail, subject, html);
+
     return response(
       200,
       { id_pengaduan: id, status },
@@ -174,19 +239,101 @@ router.put("/:id/status", auth, async (req, res) => {
   }
 });
 
-// ==================== DELETE Endpoints ====================
+// ----------------- Tambahan: endpoint reply admin (POST /:id/reply) -----------------
+// Admin mengirim tanggapan; simpan ke tabel tanggapan dan kirim email ke pelapor
+router.post("/:id/reply", auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isi_tanggapan } = req.body;
 
+    // cek role admin (opsional)
+    if (req.user && req.user.role && req.user.role.toLowerCase() !== "admin") {
+      return response(
+        403,
+        null,
+        "Hanya admin yang dapat membalas pengaduan",
+        res
+      );
+    }
+
+    if (!isi_tanggapan || String(isi_tanggapan).trim() === "") {
+      return response(400, null, "Isi tanggapan wajib diisi", res);
+    }
+
+    // Pastikan pengaduan ada
+    const [pengRows] = await pool.query(
+      "SELECT nik, judul_pengaduan FROM pengaduan WHERE id_pengaduan = ?",
+      [id]
+    );
+    if (pengRows.length === 0) {
+      return response(404, null, "Pengaduan tidak ditemukan", res);
+    }
+    const peng = pengRows[0];
+
+    // Simpan tanggapan ke tabel tanggapan
+    const idAdmin = req.user.id || req.user.id_admin || null; // sesuaikan dengan payload token
+    const tgl = new Date();
+    const insertSql =
+      "INSERT INTO tanggapan (id_pengaduan, tgl_tanggapan, tanggapan, id_admin) VALUES (?, ?, ?, ?)";
+    await pool.query(insertSql, [
+      id,
+      tgl.toISOString().split("T")[0],
+      isi_tanggapan,
+      idAdmin,
+    ]);
+
+    // Ambil email user
+    const user = await getUserByNik(peng.nik);
+    const userEmail = user ? user.email : null;
+    const userName = user ? user.nama : peng.nama || "";
+
+    // Kirim email notifikasi tanggapan
+    const subject = `Balasan untuk Laporan Anda: ${peng.judul_pengaduan}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; color:#222;">
+        <h2 style="color:#1e3a8a">Balasan dari Admin</h2>
+        <p>Hai <strong>${userName}</strong>,</p>
+        <p>Admin telah memberikan tanggapan pada laporan Anda (<strong>${peng.judul_pengaduan}</strong>, ID: ${id}):</p>
+        <blockquote style="background:#f1f5f9;border-left:4px solid #1e3a8a;padding:10px;margin:10px 0;">${isi_tanggapan}</blockquote>
+        <p>Silakan login untuk melihat detail dan menanggapi jika diperlukan.</p>
+      </div>
+    `;
+    await sendEmailToUser(userEmail, subject, html);
+
+    return response(
+      200,
+      { id_pengaduan: id },
+      "Tanggapan dikirim dan user diberi notifikasi",
+      res
+    );
+  } catch (err) {
+    console.error("Error reply pengaduan:", err);
+    return response(500, null, "Gagal mengirim tanggapan", res);
+  }
+});
+
+// DELETE pengaduan yang berstatus 'Tidak Valid' (admin/petugas only) + kirim email notifikasi reject
 router.delete("/:id/delete-invalid", auth, async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Pastikan pengaduan ada dan dapat dihapus
     const [rows] = await pool.query(
-      "SELECT status, foto FROM pengaduan WHERE id_pengaduan = ?",
+      "SELECT status, foto, nik, judul_pengaduan FROM pengaduan WHERE id_pengaduan = ?",
       [id]
     );
+
     if (rows.length === 0) {
       return response(404, null, "Pengaduan tidak ditemukan", res);
     }
-    const { status: currentStatus, foto: fotoFilename } = rows[0];
+
+    const {
+      status: currentStatus,
+      foto: fotoFilename,
+      nik,
+      judul_pengaduan,
+    } = rows[0];
+
     if (currentStatus.trim() !== "Tidak Valid") {
       return response(
         400,
@@ -195,23 +342,45 @@ router.delete("/:id/delete-invalid", auth, async (req, res) => {
         res
       );
     }
+
+    // Hapus dari DB
     const [result] = await pool.query(
       "DELETE FROM pengaduan WHERE id_pengaduan = ?",
       [id]
     );
+
     if (result.affectedRows > 0) {
+      // Hapus file foto jika ada
       if (fotoFilename) {
-          const filePath = path.join(__dirname, "../uploads/", fotoFilename);
+        const filePath = path.join(__dirname, "../uploads/", fotoFilename);
         fs.unlink(filePath, (err) => {
           if (err) {
             console.error("Error menghapus file foto:", err);
           }
         });
       }
+
+      // Ambil email user berdasarkan nik
+      const user = await getUserByNik(nik);
+      const userEmail = user ? user.email : null;
+      const userName = user ? user.nama : "";
+
+      // Kirim email notifikasi laporan tidak valid (jika tersedia email)
+      const subject = `Laporan Anda Ditolak: ${judul_pengaduan}`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; color:#222;">
+          <h2 style="color:#1e3a8a">Laporan Tidak Valid</h2>
+          <p>Hai <strong>${userName}</strong>,</p>
+          <p>Laporan Anda dengan judul <strong>${judul_pengaduan}</strong> (ID: ${id}) telah dinyatakan <strong>tidak valid</strong> dan telah dihapus oleh admin.</p>
+          <p>Jika Anda merasa ini keliru, silakan ajukan kembali laporan dengan informasi yang lebih lengkap.</p>
+        </div>
+      `;
+      await sendEmailToUser(userEmail, subject, html);
+
       return response(
         200,
         { id_pengaduan: id },
-        "Pengaduan tidak valid berhasil dihapus",
+        "Pengaduan tidak valid berhasil dihapus dan user diberi notifikasi",
         res
       );
     } else {
@@ -234,7 +403,7 @@ router.delete("/:id/delete-invalid", auth, async (req, res) => {
 });
 
 // USER endpoint: Tandai selesai / lock pengaduan (user confirms admin's 'Selesai')
-router.post('/:id/confirm-complete', auth, async (req, res) => {
+router.post("/:id/confirm-complete", auth, async (req, res) => {
   try {
     const { id } = req.params;
     const nik = req.user.nik;
@@ -244,16 +413,16 @@ router.post('/:id/confirm-complete', auth, async (req, res) => {
     let needMigration = false;
     try {
       const result = await pool.query(
-        'SELECT nik, status, is_locked FROM pengaduan WHERE id_pengaduan = ?',
+        "SELECT nik, status, is_locked FROM pengaduan WHERE id_pengaduan = ?",
         [id]
       );
       rows = result[0];
     } catch (errSelect) {
       // If column is_locked doesn't exist, fall back and signal migration required
-      if (errSelect && String(errSelect).includes('Unknown column')) {
+      if (errSelect && String(errSelect).includes("Unknown column")) {
         needMigration = true;
         const result = await pool.query(
-          'SELECT nik, status FROM pengaduan WHERE id_pengaduan = ?',
+          "SELECT nik, status FROM pengaduan WHERE id_pengaduan = ?",
           [id]
         );
         rows = result[0];
@@ -262,19 +431,24 @@ router.post('/:id/confirm-complete', auth, async (req, res) => {
       }
     }
     if (rows.length === 0) {
-      return response(404, null, 'Pengaduan tidak ditemukan', res);
+      return response(404, null, "Pengaduan tidak ditemukan", res);
     }
 
     const pengaduan = rows[0];
 
     // Only owner can confirm
     if (String(pengaduan.nik) !== String(nik)) {
-      return response(403, null, 'Anda tidak berhak melakukan aksi ini', res);
+      return response(403, null, "Anda tidak berhak melakukan aksi ini", res);
     }
 
     // Must be in 'Selesai' status
-    if (pengaduan.status !== 'Selesai') {
-      return response(400, null, "Hanya pengaduan dengan status 'Selesai' dapat ditandai selesai oleh pengguna", res);
+    if (pengaduan.status !== "Selesai") {
+      return response(
+        400,
+        null,
+        "Hanya pengaduan dengan status 'Selesai' dapat ditandai selesai oleh pengguna",
+        res
+      );
     }
 
     // If migration is required (columns missing), return helpful message
@@ -290,7 +464,12 @@ router.post('/:id/confirm-complete', auth, async (req, res) => {
 
     // Check if already locked
     if (pengaduan.is_locked === 1) {
-      return response(400, null, 'Pengaduan sudah ditandai selesai sebelumnya', res);
+      return response(
+        400,
+        null,
+        "Pengaduan sudah ditandai selesai sebelumnya",
+        res
+      );
     }
 
     // Update to lock and set tanggal_tandai_selesai
@@ -300,14 +479,25 @@ router.post('/:id/confirm-complete', auth, async (req, res) => {
     );
 
     if (updateResult.affectedRows === 0) {
-      return response(500, null, 'Gagal menandai selesai pengaduan', res);
+      return response(500, null, "Gagal menandai selesai pengaduan", res);
     }
 
-    return response(200, { id_pengaduan: id }, 'Pengaduan berhasil ditandai selesai oleh pengguna', res);
+    return response(
+      200,
+      { id_pengaduan: id },
+      "Pengaduan berhasil ditandai selesai oleh pengguna",
+      res
+    );
   } catch (err) {
-    console.error('Error confirm-complete:', err);
-    return response(500, null, 'Gagal menandai selesai pengaduan. (Kesalahan server)', res);
+    console.error("Error confirm-complete:", err);
+    return response(
+      500,
+      null,
+      "Gagal menandai selesai pengaduan. (Kesalahan server)",
+      res
+    );
   }
 });
 
 module.exports = router;
+ 

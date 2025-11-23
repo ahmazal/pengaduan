@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, AlertCircle, CheckCircle } from "lucide-react";
 
 export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange }) {
-  const [selectedStatus, setSelectedStatus] = useState(pengaduan?.status || "");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Keep selectedStatus in sync when pengaduan prop changes
+  useEffect(() => {
+    setSelectedStatus(pengaduan?.status || "");
+  }, [pengaduan]);
 
   const handleSubmit = async () => {
     if (selectedStatus === pengaduan?.status) {
@@ -96,10 +102,6 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
                       : "bg-red-600"
                   }`}
                 >
-                  {pengaduan.status === "Menunggu"}
-                  {pengaduan.status === "Diproses"}
-                  {pengaduan.status === "Selesai"}
-                  {pengaduan.status === "Tidak Valid"}
                   {pengaduan.status}
                 </span>
               </div>

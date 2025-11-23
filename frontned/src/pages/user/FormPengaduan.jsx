@@ -1,4 +1,11 @@
-import { FileText, Calendar, Layers, MessageCircle, Image, MapPin } from "lucide-react";
+import {
+  FileText,
+  Calendar,
+  Layers,
+  MessageCircle,
+  Image,
+  MapPin,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
 import NavUser from "../../components/NavUser";
@@ -24,13 +31,13 @@ export default function FormPengaduan() {
         (position) => {
           const { latitude, longitude } = position.coords;
           // Open Google Maps with current location as center
-          const mapsUrl = `https://www.google.com/maps/@${latitude},${longitude},15z`;
+          const mapsUrl = 'https://www.google.com/maps/@${latitude},${longitude},15z';
           window.open(mapsUrl, "_blank");
           Swal.fire({
             icon: "info",
             title: "Pilih Lokasi",
             html: "<p>Pilih lokasi di Google Maps, kemudian copy koordinat (klik marker) dan paste di field lokasi</p>",
-            confirmButtonColor: "#ea580c"
+            confirmButtonColor: "#ea580c",
           });
         },
         () => {
@@ -40,7 +47,7 @@ export default function FormPengaduan() {
             icon: "info",
             title: "Pilih Lokasi",
             html: "<p>Pilih lokasi di Google Maps, kemudian copy koordinat dan paste di field lokasi</p><p><small>Format: latitude, longitude (contoh: -6.200000, 106.816666)</small></p>",
-            confirmButtonColor: "#ea580c"
+            confirmButtonColor: "#ea580c",
           });
         }
       );
@@ -50,7 +57,7 @@ export default function FormPengaduan() {
         icon: "info",
         title: "Pilih Lokasi",
         html: "<p>Pilih lokasi di Google Maps, kemudian copy koordinat dan paste di field lokasi</p><p><small>Format: latitude, longitude (contoh: -6.200000, 106.816666)</small></p>",
-        confirmButtonColor: "#ea580c"
+        confirmButtonColor: "#ea580c",
       });
     }
   };
@@ -61,7 +68,7 @@ export default function FormPengaduan() {
         icon: "error",
         title: "Validasi Error",
         text: "Semua field wajib diisi.",
-        confirmButtonColor: "#ea580c"
+        confirmButtonColor: "#ea580c",
       });
       return;
     }
@@ -71,7 +78,7 @@ export default function FormPengaduan() {
         icon: "error",
         title: "Validasi Error",
         text: "Foto wajib diupload.",
-        confirmButtonColor: "#ea580c"
+        confirmButtonColor: "#ea580c",
       });
       return;
     }
@@ -100,7 +107,7 @@ export default function FormPengaduan() {
           icon: "success",
           title: "Berhasil!",
           text: "Pengaduan berhasil dikirim!",
-          confirmButtonColor: "#ea580c"
+          confirmButtonColor: "#ea580c",
         });
         setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" });
         setFile(null);
@@ -110,7 +117,7 @@ export default function FormPengaduan() {
           icon: "error",
           title: "Gagal",
           text: data.message || "Gagal mengirim pengaduan.",
-          confirmButtonColor: "#ea580c"
+          confirmButtonColor: "#ea580c",
         });
       }
     } catch (err) {
@@ -119,7 +126,7 @@ export default function FormPengaduan() {
         icon: "error",
         title: "Error",
         text: "Terjadi kesalahan server: " + err.message,
-        confirmButtonColor: "#ea580c"
+        confirmButtonColor: "#ea580c",
       });
     }
   };
@@ -128,7 +135,7 @@ export default function FormPengaduan() {
     let map, marker;
     if (isMapOpen) {
       map = new window.google.maps.Map(document.getElementById("map"), {
-        center: { lat: -6.200000, lng: 106.816666 },
+        center: { lat: -6.2, lng: 106.816666 },
         zoom: 13,
       });
 
@@ -158,115 +165,170 @@ export default function FormPengaduan() {
     <div className="flex min-h-screen bg-gray-50">
       <NavUser />
 
-      <main className="ml-64 w-full p-10">
-        <div className="max-w-3xl mx-auto mt-6 bg-white p-10 rounded-3xl shadow-lg">
-          <h1 className="text-3xl font-bold text-orange-600 mb-1">Buat Pengaduan</h1>
-          <p className="text-gray-500 mb-10">Silakan isi detail pengaduan dengan lengkap.</p>
+      <main className="ml-64 w-full min-h-screen bg-gray-100 p-10">
+        <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-md p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            Buat Pengaduan
+          </h1>
+          <p className="text-gray-500 mb-10">
+            Silakan isi detail pengaduan dengan lengkap.
+          </p>
 
           <div className="space-y-8">
-
             {/* JUDUL */}
-            <div className="relative group">
-              <FileText className="absolute left-4 top-4 text-orange-500" size={22} />
+            <div className="relative">
+              <FileText
+                className="absolute left-5 top-4 text-gray-700"
+                size={22}
+              />
               <input
                 id="judul"
                 type="text"
                 value={filled.judul}
-                onChange={(e) => setFilled({ ...filled, judul: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl p-4 pl-12 focus:ring-orange-200"
+                onChange={(e) =>
+                  setFilled({ ...filled, judul: e.target.value })
+                }
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
               />
-              <label htmlFor="judul" className={`absolute left-12 bg-white px-1 transition-all 
-                ${filled.judul ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"}`}>
+              <label
+                htmlFor="judul"
+                className={`absolute left-14 bg-white px-2 transition-all duration-200
+            ${
+              filled.judul
+                ? "-top-3 text-xs text-orange-600"
+                : "top-4 text-gray-400"
+            }`}
+              >
                 Judul Pengaduan
               </label>
             </div>
 
             {/* TANGGAL */}
-            <div className="relative group">
-              <Calendar className="absolute left-4 top-4 text-orange-500" size={22} />
-              <input
-                type="date"
-                id="date"
-                value={filled.tanggal}
-                onChange={(e) => setFilled({ ...filled, tanggal: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl p-4 pl-12"
+            <div className="relative">
+              <Calendar
+                className="absolute left-5 top-4 text-gray-700"
+                size={22}
               />
-              <label htmlFor="date" className={`absolute left-12 bg-white px-1 transition-all
-                ${filled.tanggal ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"}`}>
+              <input
+                id="date"
+                type="date"
+                value={filled.tanggal}
+                onChange={(e) =>
+                  setFilled({ ...filled, tanggal: e.target.value })
+                }
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
+              />
+              <label
+                htmlFor="date"
+                className={`absolute left-14 bg-white px-2 transition-all duration-200
+            ${
+              filled.tanggal
+                ? "-top-3 text-xs text-orange-600"
+                : "top-4 text-gray-400"
+            }`}
+              >
                 Tanggal Pengaduan
               </label>
             </div>
 
             {/* ISI */}
             <div className="relative">
-              <MessageCircle className="absolute left-4 top-4 text-orange-500" size={22} />
+              <MessageCircle
+                className="absolute left-5 top-4 text-gray-700"
+                size={22}
+              />
               <textarea
-                rows="5"
+                id="isi"
+                rows="6"
                 value={filled.isi}
-                id="desk"
                 onChange={(e) => setFilled({ ...filled, isi: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl p-4 pl-12"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
               ></textarea>
-              <label htmlFor="desk" className={`absolute left-12 bg-white px-1 transition-all
-                ${filled.isi ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"}`}>
+              <label
+                htmlFor="isi"
+                className={`absolute left-14 bg-white px-2 transition-all duration-200
+            ${
+              filled.isi
+                ? "-top-3 text-xs text-orange-600"
+                : "top-4 text-gray-400"
+            }`}
+              >
                 Isi Pengaduan
               </label>
             </div>
 
             {/* FOTO */}
             <div className="relative">
-              <Image className="absolute left-4 top-3.5 text-orange-500" size={20} />
+              <Image
+                className="absolute left-5 top-3.5 text-gray-700"
+                size={20}
+              />
               <input
                 type="file"
-                ref={fileRef} // <<< tambahan
+                ref={fileRef}
                 onChange={(e) => setFile(e.target.files[0])}
-                className="w-full border border-gray-300 rounded-xl pl-12 py-2"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 pl-14 py-2.5 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
               />
             </div>
 
-            {/* LOKASI */}
-            <div className="relative group">
-              <MapPin className="absolute left-4 top-4 text-orange-500" size={22} />
+            {/* KOORDINAT */}
+            <div className="relative">
+              <MapPin
+                className="absolute left-5 top-4 text-gray-700"
+                size={22}
+              />
+
               <input
+                id="lokasi"
                 type="text"
                 value={filled.lokasi}
-                onChange={(e) => setFilled({ ...filled, lokasi: e.target.value })}
+                onChange={(e) =>
+                  setFilled({ ...filled, lokasi: e.target.value })
+                }
                 placeholder="Latitude, Longitude (contoh: -6.200000, 106.816666)"
-                className="w-full border border-gray-300 rounded-xl p-4 pl-12 focus:ring-orange-200"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
               />
+
               <label
-                className={`absolute left-12 bg-white px-1 transition-all ${
-                  filled.lokasi ? "-top-2 text-xs text-orange-600" : "top-4 text-gray-400"
-                }`}
+                htmlFor="lokasi"
+                className={`absolute left-14 bg-white px-2 transition-all duration-200
+            ${
+              filled.lokasi
+                ? "-top-3 text-xs text-orange-600"
+                : "top-4 text-gray-400"
+            }`}
               >
                 Lokasi (Koordinat)
               </label>
+
               <button
                 type="button"
                 onClick={handleOpenGoogleMaps}
-                className="cursor-pointer absolute right-4 top-2.5 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+                className="absolute right-3 top-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 shadow-sm transition"
               >
-                Buka Google Maps
+                Buka Maps
               </button>
             </div>
 
             {/* BUTTON */}
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="flex justify-end gap-4 pt-6">
               <button
-                onClick={() => setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" })}
-                className="cursor-pointer px-6 py-3 border rounded-xl"
+                onClick={() =>
+                  setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" })
+                }
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl bg-red hover:bg-gray-100 transition"
               >
                 Reset
               </button>
 
               <button
                 onClick={handleSubmit}
-                className="cursor-pointer px-8 py-3 bg-orange-600 text-white rounded-xl"
+                className="px-8 py-3 bg-orange-600 text-white rounded-xl shadow hover:bg-orange-700 transition"
               >
                 Kirim Pengaduan
               </button>
             </div>
-
+            
           </div>
         </div>
       </main>

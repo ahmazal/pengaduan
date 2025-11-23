@@ -8,6 +8,8 @@ import jsPDF from "jspdf";
 import NavAdmin from "../../components/NavAdmin";
 import StatusModal from "../../components/StatusModal";
 import { deleteInvalidPengaduan } from "../../services/api";
+import { GrFormTrash } from "react-icons/gr";
+import { FaWpforms } from "react-icons/fa6";
 
 // Fungsi bantu untuk mengambil foto dari URL dan ubah ke Base64
 const getBase64FromUrl = async (url) => {
@@ -466,13 +468,13 @@ function SemuaPengaduan() {
                           {p.status}
                         </span>
                       </td>
-                      <td className="px-3 py-4 flex-col text-sm flex gap-2 flex-wrap">
+                      <td className="px-3 py-4 text-sm flex gap-2 flex-wrap">
                         {/* Tombol Lihat Detail */}
                         <button
                           onClick={() => handleOpenModal(p)}
                           className="px-3 py-1 bg-blue-500 text-white rounded shadow hover:bg-blue-700 transition text-xs"
                         >
-                          Lihat Detail
+                          <FaWpforms />
                         </button>
 
                         {/* Tombol Download PDF */}
@@ -482,7 +484,6 @@ function SemuaPengaduan() {
                           title="Download PDF"
                         >
                           <Download size={14} />
-                          Download
                         </button>
 
                         {/* TOMBOL HAPUS PERMANEN HANYA UNTUK 'Tidak Valid' */}
@@ -492,7 +493,7 @@ function SemuaPengaduan() {
                             className="px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-700 transition text-xs"
                             title="Hapus permanen laporan dan fotonya dari server"
                           >
-                            Hapus Permanen
+                            <GrFormTrash size={14} />
                           </button>
                         )}
                       </td>

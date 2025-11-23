@@ -10,6 +10,7 @@ import FormPengaduan from './pages/user/FormPengaduan';
 import SemuaPengaduan from './pages/admin/SemuaPengaduan';
 import ListAduan from './pages/user/ListAduan';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
+import Profile from './components/fixtures/Profile';
 
 function App() {
   return (
@@ -39,6 +40,13 @@ function App() {
           </PrivateRoutes>
         } 
       />
+      <Route path="/admin/profile" 
+        element={
+          <PrivateRoutes Role={'Admin'}>
+            <Profile />
+          </PrivateRoutes>
+        } 
+      />
 
         {/* user */}
       <Route path='/user/dashboard' 
@@ -56,6 +64,11 @@ function App() {
       <Route path="/user/riwayat" element={
         <PrivateRoutes Role={'Masyarakat'} >
             <ListAduan/>
+          </PrivateRoutes>
+      } />
+      <Route path="/user/profile" element={
+        <PrivateRoutes Role={'Masyarakat'} >
+            <Profile/>
           </PrivateRoutes>
       } />
     </Routes>
