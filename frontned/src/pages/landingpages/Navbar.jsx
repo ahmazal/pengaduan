@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../../assets/img/logo.png";
 
 function Navbar() {
   const [isActive, setIsActive] = useState(false);
@@ -66,22 +67,59 @@ function Navbar() {
   };
 
   return (
-    <div className={`w-full z-30 fixed ${isActive ? "-translate-y-full" : "translate-y-0"} duration-300`}>
-      <div className="px-4 py-2 flex justify-between items-center bg-zinc-100 rounded-b-2xl backdrop-blur-sm">
-        <div className="bg-white shadow rounded-full px-4 py-2">
+    <div
+      className={`w-full z-30 fixed ${
+        isActive ? "-translate-y-full" : "translate-y-0"
+      } duration-300`}
+    >
+      <div className="px-4 py-2 flex justify-between items-center rounded-b-2xl">
+        <div className="flex items-center justify-center px-3 py-1 gap-2">
+          <div className="min-w-8 max-w-8 rounded-full overflow-hidden">
+            <img src={logo} alt="logo" className="w-full h-full" />
+          </div>
           <h2 className="text-xl text-amber-500 font-bold">LaporKang</h2>
         </div>
 
-        <div className="flex items-center gap-4">
-          <button onClick={() => scrollToSection("Beranda")}>Beranda</button>
-          <button onClick={() => scrollToSection("Carakerja")}>Cara Kerja</button>
-          <button onClick={() => scrollToSection("Berita")}>Berita</button>
+        <div className="flex shadow items-center border rounded-full px-4 py-2 border-zinc-100 gap-4 text-zinc-800 bg-white/20 backdrop-blur-sm">
+          <button
+            className="relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
+            onClick={() => scrollToSection("Beranda")}>
+            <span className="block translate-y-0 group-hover:-translate-y-full transition-transform duration-300">
+              Beranda
+            </span>
+            <span className="absolute left-0 top-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+              Beranda
+            </span>
+          </button>
+          <button
+            className="relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
+            onClick={() => scrollToSection("Carakerja")}>
+            <span className="block translate-y-0 group-hover:-translate-y-full transition-transform duration-300">
+              Cara Kerja
+            </span>
+            <span className="absolute left-0 top-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+              Cara Kerja
+            </span>
+          </button>
+          <button
+            className="relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
+            onClick={() => scrollToSection("Berita")}>
+            <span className="block translate-y-0 group-hover:-translate-y-full transition-transform duration-300">
+              Berita
+            </span>
+            <span className="absolute left-0 top-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+              Berita
+            </span>
+          </button>
         </div>
 
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <div className="relative">
-              <button onClick={() => setShowDropdown(!showDropdown)} className="cursor-pointer focus:outline-none">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="cursor-pointer focus:outline-none"
+              >
                 <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-amber-600 transition">
                   {getAvatarLetter()}
                 </div>
@@ -116,13 +154,13 @@ function Navbar() {
             <>
               <button
                 onClick={() => Navigate("/Login")}
-                className="cursor-pointer border border-transparent bg-amber-500 p-2 rounded-full font-bold text-white hover:bg-amber-600 transition"
+                className="cursor-pointer border border-transparent bg-amber-500 px-3 py-1 rounded-full text-white hover:bg-amber-600 transition"
               >
                 Login
               </button>
               <span
                 onClick={() => Navigate("/Register")}
-                className="cursor-pointer border border-amber-500 p-2 rounded-full font-bold hover:bg-amber-50 transition"
+                className="cursor-pointer border border-amber-500 px-3 py-1 rounded-full hover:bg-amber-50 transition"
               >
                 Register
               </span>
