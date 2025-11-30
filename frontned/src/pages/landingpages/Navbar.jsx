@@ -82,7 +82,7 @@ function Navbar() {
 
         <div className="flex shadow items-center border rounded-full px-4 py-2 border-zinc-100 gap-4 text-zinc-800 bg-white/20 backdrop-blur-sm">
           <button
-            className="relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
+            className="cursor-pointer relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
             onClick={() => scrollToSection("Beranda")}>
             <span className="block translate-y-0 group-hover:-translate-y-full transition-transform duration-300">
               Beranda
@@ -92,7 +92,7 @@ function Navbar() {
             </span>
           </button>
           <button
-            className="relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
+            className="cursor-pointer relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
             onClick={() => scrollToSection("Carakerja")}>
             <span className="block translate-y-0 group-hover:-translate-y-full transition-transform duration-300">
               Cara Kerja
@@ -102,7 +102,7 @@ function Navbar() {
             </span>
           </button>
           <button
-            className="relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
+            className="cursor-pointer relative flex flex-col uppercase text-xs font-bold tracking-wider group overflow-hidden"
             onClick={() => scrollToSection("Berita")}>
             <span className="block translate-y-0 group-hover:-translate-y-full transition-transform duration-300">
               Berita

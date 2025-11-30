@@ -1,8 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import jln from "../../assets/img/JlnRusak.jpg";
-import kriminalitas from "../../assets/img/kriminalitas.jpg";
-import pelayanan from "../../assets/img/pelayanan.jpg";
-import fasilitas from "../../assets/img/fasilitas.jpg";
 import Title from "../../components/Title";
 import apiClient from "../../api/apiClient";
 
@@ -11,46 +7,6 @@ const Berita = () => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const scrolRef = useRef(null);
-
-  // Fallback data jika backend error
-  const fallbackCards = [
-    {
-      id: 1,
-      image: jln,
-      title: "jalan rusak",
-      judul: "Berita Terkini",
-      description: "jalan rusak",
-      point:
-        "Permukaan jalan banyak berlubang dan retak, beberapa bagian mengalami penurunan profil (ambles). Lubang-lubang tersebut berukuran sedang hingga besar sehingga menyulitkan kendaraan roda dua dan roda empat, serta berpotensi menyebabkan kecelakaan terutama pada malam hari ketika penerangan minim. Genangan air sering terbentuk setelah hujan, memperparah kerusakan.",
-    },
-    {
-      id: 2,
-      image: kriminalitas,
-      title: "Klitih",
-      judul: "Berita Terkini",
-      description: "Terjadi aksi penyerangan",
-      point:
-        "Terjadi tindakan klitih di wilayah Desa Cihuy pada malam hari di sekitar area jalan utama. Pelaku diduga sekelompok remaja yang melakukan tindakan intimidasi dan mencoba menyerang pengguna jalan dengan benda tumpul. Kejadian ini membuat warga merasa tidak aman, terutama saat beraktivitas pada malam hari. Mohon pihak berwenang melakukan patroli, pendataan, dan penindakan agar kondisi kembali aman serta mencegah kejadian serupa terulang.",
-    },
-    {
-      id: 3,
-      image: fasilitas,
-      title: "fasilitas",
-      judul: "Berita Terkini",
-      description: "Fasilitas Rusak",
-      point:
-        "Rambu lalu lintas di area perempatan Desa Cihuy mengalami kerusakan. Tiangnya miring dan permukaan rambunya pudar serta tergores sehingga tanda tidak terlihat jelas oleh pengendara. Kondisi ini membuat banyak pengendara tidak menyadari larangan tersebut dan tetap melakukan putar arah, yang mengakibatkan potensi konflik lalu lintas.",
-    },
-    {
-      id: 4,
-      image: pelayanan,
-      title: "pelayanan",
-      judul: "Berita Terkini",
-      description: "Pelayanan Buruk",
-      point:
-        "Pelayanan publik di kantor Desa Cihuy dirasakan kurang baik oleh warga. Beberapa keluhan yang muncul meliputi proses pelayanan yang lambat, kurangnya kejelasan informasi, serta sikap petugas yang dianggap kurang responsif ketika warga meminta bantuan atau penjelasan. Warga sering harus menunggu terlalu lama meskipun antrean tidak ramai. Selain itu, beberapa permohonan administrasi desa juga tidak dikerjakan sesuai batas waktu yang dijanjikan.",
-    },
-  ];
 
   // Fetch berita dari backend
   const fetchBerita = async () => {
@@ -66,7 +22,7 @@ const Berita = () => {
         // Transform backend data ke format cards
         const transformedCards = data.map((item, index) => ({
           id: item.id_pengaduan,
-          image: item.foto ? `http://localhost:5000/uploads/${item.foto}` : jln,
+          image: `http://localhost:5000/uploads/${item.foto}`,
           title: item.judul_pengaduan,
           judul: "Berita Terkini",
           description: item.judul_pengaduan,

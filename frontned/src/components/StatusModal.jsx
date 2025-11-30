@@ -52,7 +52,7 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
       setTimeout(() => {
         onClose();
         setSuccessMessage("");
-        setTanggapan(""); // reset tanggapan
+        setTanggapan("");
       }, 1000);
     } catch (err) {
       console.error("Error:", err);
