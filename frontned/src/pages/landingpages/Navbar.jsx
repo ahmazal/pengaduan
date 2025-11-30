@@ -118,8 +118,7 @@ function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="cursor-pointer focus:outline-none"
-              >
+                className="cursor-pointer min-w-40 focus:outline-none flex justify-end">
                 <div className="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-amber-600 transition">
                   {getAvatarLetter()}
                 </div>

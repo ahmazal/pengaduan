@@ -51,6 +51,7 @@ function Hero() {
       <div
         id="Beranda"
         className="flex min-h-screen justify-center items-center flex-col gap-4"
+        data-aos="zoom-in"
       >
         <div className="flex flex-col gap-4 text-center">
           <h1 className="text-4xl font-bold flex flex-col">
@@ -85,7 +86,8 @@ function Hero() {
               return (
                 <div
                   key={i}
-                  className="flex flex-col text-center max-w-xs p-4 justify-between hover:-translate-y-1 duration-300"
+                  data-aos={i % 2 === 0 ? "zoom-in-right" : "zoom-in-up"}
+                  className={`flex flex-col text-center max-w-xs p-4 justify-between hover:-translate-y-1 duration-300`}
                 >
                   <h1 className="flex justify-center items-center text-4xl">
                     {item.symbol}

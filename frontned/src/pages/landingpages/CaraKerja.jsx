@@ -34,6 +34,7 @@ function CaraKerja() {
         {steps.map((step, index) => (
           <div
             key={index}
+            data-aos="fade-up"
             className={`flex items-center w-full mb-10 ${
               step.side === "left" ? "justify-start" : "justify-end"
             }`}
@@ -45,10 +46,8 @@ function CaraKerja() {
                   <h3 className="text-lg font-semibold">{step.title}</h3>
                   <p className="text-gray-600 text-sm">{step.desc}</p>
                 </div>
-
                 {/* Titik */}
                 <div className="relative flex items-center justify-center w-8 h-8 text-white bg-blue-500 rounded-full border-4 border-white z-10">{index+1}</div>
-
                 {/* Kosong kanan */}
                 <div className="w-1/2"></div>
               </>
@@ -56,10 +55,8 @@ function CaraKerja() {
               <>
                 {/* Kosong kiri */}
                 <div className="w-1/2"></div>
-
                 {/* Titik */}
                 <div className="relative flex items-center justify-center w-8 h-8 text-white bg-blue-500 rounded-full border-4 border-white z-10">{index+1}</div>
-
                 {/* Kanan */}
                 <div className="w-1/2 px-4 text-left">
                   <h3 className="text-lg font-semibold">{step.title}</h3>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Signup';
@@ -11,8 +11,17 @@ import SemuaPengaduan from './pages/admin/SemuaPengaduan';
 import ListAduan from './pages/user/ListAduan';
 import AnalyticsPage from './pages/admin/AnalyticsPage';
 import Profile from './components/fixtures/Profile';
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 function App() {
+  useEffect (() => {
+    AOS.init({
+      duration: 800,
+    }),
+    AOS.refresh();
+  },[])
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />

@@ -37,6 +37,12 @@ function SemuaPengaduan() {
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPengaduan, setSelectedPengaduan] = useState(null);
+  const [stats, setStats] = useState({
+      menunggu: 0,
+      diproses: 0,
+      selesai: 0,
+      tidakValid: 0,
+    });
 
   const handleOpenModal = (p) => {
     setSelectedPengaduan(p);
@@ -116,24 +122,40 @@ function SemuaPengaduan() {
     }
   };
 
-  const handleStatusChange = async (id_pengaduan, newStatus) => {
+  const handleStatusChange = async (id, newStatus, tanggapan_opsional) => {
     try {
-      const token = localStorage.getItem("token");
-      await apiClient.put(
-        `/pengaduan/${id_pengaduan}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await apiClient.put(`/pengaduan/${id}/status`, { status: newStatus, tanggapan_opsional });
+      
+      setPengaduan((prev) =>
+        prev.map((p) =>
+          p.id_pengaduan === id ? { ...p, status: newStatus } : p
+        )
       );
-
-      fetchAllPengaduan();
+      const updatedPengaduan = pengaduan.map((p) =>
+        p.id_pengaduan === id ? { ...p, status: newStatus } : p
+      );
+      setStats({
+        menunggu: updatedPengaduan.filter((p) => p.status === "Menunggu").length,
+        diproses: updatedPengaduan.filter((p) => p.status === "Diproses").length,
+        selesai: updatedPengaduan.filter((p) => p.status === "Selesai").length,
+        tidakValid: updatedPengaduan.filter((p) => p.status === "Tidak Valid").length,
+      });
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Status pengaduan berhasil diupdate!",
+        confirmButtonColor: "#4f46e5"
+      });
     } catch (err) {
       console.error("Gagal update status:", err);
-      const errorMessage =
-        err.response?.data?.message || "Gagal memperbarui status.";
-      alert(errorMessage);
-      throw err;
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal mengupdate status pengaduan",
+        confirmButtonColor: "#4f46e5"
+      });
     }
-  };
+  }
 
   // Fungsi Stylish PDF Laporan Detail (foto di dalam kotak)
   const handleDownloadOnePDF = async (p) => {

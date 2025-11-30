@@ -70,18 +70,15 @@ export default function AdminDashboard() {
           p.id_pengaduan === id ? { ...p, status: newStatus } : p
         )
       );
-
       const updatedPengaduan = pengaduan.map((p) =>
         p.id_pengaduan === id ? { ...p, status: newStatus } : p
       );
-
       setStats({
         menunggu: updatedPengaduan.filter((p) => p.status === "Menunggu").length,
         diproses: updatedPengaduan.filter((p) => p.status === "Diproses").length,
         selesai: updatedPengaduan.filter((p) => p.status === "Selesai").length,
         tidakValid: updatedPengaduan.filter((p) => p.status === "Tidak Valid").length,
       });
-
       Swal.fire({
         icon: "success",
         title: "Berhasil!",

@@ -4,6 +4,7 @@ import { Menu, Gauge, FileText, Clock, User, LogOut } from "lucide-react";
 
 export default function NavUser() {
   const nav = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
 
   const logout = () => {
     localStorage.clear();
