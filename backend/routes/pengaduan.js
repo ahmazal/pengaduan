@@ -155,11 +155,10 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
 router.put("/:id/status", auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, tanggapan_opsional } = req.body; // tetap
 
-    // Optional: cek role admin (asumsi req.user.role ada)
+    // Cek role admin
     if (req.user && req.user.role && req.user.role.toLowerCase() !== "admin") {
-      // jika kamu tidak pakai role, hapus blok ini
       return response(403, null, "Hanya admin yang dapat mengubah status", res);
     }
 
@@ -169,7 +168,7 @@ router.put("/:id/status", auth, async (req, res) => {
       return response(400, null, "Status tidak valid", res);
     }
 
-    // Cek lock bila ada
+    // Cek lock
     try {
       const [checkRows] = await pool.query(
         "SELECT is_locked FROM pengaduan WHERE id_pengaduan = ?",
@@ -185,7 +184,6 @@ router.put("/:id/status", auth, async (req, res) => {
       }
     } catch (errCheck) {
       if (errCheck && String(errCheck).includes("Unknown column")) {
-        // ignore
       } else {
         console.error("Error checking is_locked:", errCheck);
       }
@@ -201,30 +199,43 @@ router.put("/:id/status", auth, async (req, res) => {
       return response(404, null, "Pengaduan tidak ditemukan", res);
     }
 
-    // Ambil data pengaduan untuk info email
+    // Ambil data pengaduan
     const [pengRows] = await pool.query(
       "SELECT nik, judul_pengaduan FROM pengaduan WHERE id_pengaduan = ?",
       [id]
     );
     const peng = pengRows[0];
 
-    // Ambil user email berdasarkan nik
+    // Ambil user email
     const user = await getUserByNik(peng.nik);
     const userEmail = user ? user.email : null;
     const userName = user ? user.nama : peng.nama || "";
 
-    // Siapkan email HTML (biru)
+    // TEMPLATE EMAIL GABUNGAN
     const subject = `Status Laporan Anda: ${status}`;
     const html = `
       <div style="font-family: Arial, sans-serif; color:#222;">
         <h2 style="color:#1e3a8a">Notifikasi Status Laporan</h2>
         <p>Hai <strong>${userName}</strong>,</p>
-        <p>Status laporan Anda (<strong>${peng.judul_pengaduan}</strong>, ID: ${id}) telah diubah menjadi: <strong>${status}</strong>.</p>
+        <p>Status laporan Anda (<strong>${peng.judul_pengaduan}</strong>, ID: ${id})
+        telah diubah menjadi: <strong>${status}</strong>.</p>
+
+        ${
+          tanggapan_opsional
+            ? `
+        <p><strong>Catatan dari Admin:</strong></p>
+        <blockquote style="background:#f1f5f9;border-left:4px solid #1e3a8a;padding:10px;margin:10px 0;">
+          ${tanggapan_opsional}
+        </blockquote>
+        `
+            : ""
+        }
+
         <p>Terima kasih telah menggunakan layanan pengaduan.</p>
       </div>
     `;
 
-    // Kirim email (jangan blokir response jika gagal)
+    // KIRIM EMAIL DI SINI SAJA
     await sendEmailToUser(userEmail, subject, html);
 
     return response(
@@ -239,21 +250,15 @@ router.put("/:id/status", auth, async (req, res) => {
   }
 });
 
-// ----------------- Tambahan: endpoint reply admin (POST /:id/reply) -----------------
-// Admin mengirim tanggapan; simpan ke tabel tanggapan dan kirim email ke pelapor
+
 router.post("/:id/reply", auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { isi_tanggapan } = req.body;
 
-    // cek role admin (opsional)
+    // cek role admin
     if (req.user && req.user.role && req.user.role.toLowerCase() !== "admin") {
-      return response(
-        403,
-        null,
-        "Hanya admin yang dapat membalas pengaduan",
-        res
-      );
+      return response(403, null, "Hanya admin yang dapat membalas pengaduan", res);
     }
 
     if (!isi_tanggapan || String(isi_tanggapan).trim() === "") {
@@ -270,9 +275,10 @@ router.post("/:id/reply", auth, async (req, res) => {
     }
     const peng = pengRows[0];
 
-    // Simpan tanggapan ke tabel tanggapan
-    const idAdmin = req.user.id || req.user.id_admin || null; // sesuaikan dengan payload token
+    // Simpan tanggapan
+    const idAdmin = req.user.id || req.user.id_admin || null;
     const tgl = new Date();
+
     const insertSql =
       "INSERT INTO tanggapan (id_pengaduan, tgl_tanggapan, tanggapan, id_admin) VALUES (?, ?, ?, ?)";
     await pool.query(insertSql, [
@@ -282,28 +288,12 @@ router.post("/:id/reply", auth, async (req, res) => {
       idAdmin,
     ]);
 
-    // Ambil email user
-    const user = await getUserByNik(peng.nik);
-    const userEmail = user ? user.email : null;
-    const userName = user ? user.nama : peng.nama || "";
-
-    // Kirim email notifikasi tanggapan
-    const subject = `Balasan untuk Laporan Anda: ${peng.judul_pengaduan}`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; color:#222;">
-        <h2 style="color:#1e3a8a">Balasan dari Admin</h2>
-        <p>Hai <strong>${userName}</strong>,</p>
-        <p>Admin telah memberikan tanggapan pada laporan Anda (<strong>${peng.judul_pengaduan}</strong>, ID: ${id}):</p>
-        <blockquote style="background:#f1f5f9;border-left:4px solid #1e3a8a;padding:10px;margin:10px 0;">${isi_tanggapan}</blockquote>
-        <p>Silakan login untuk melihat detail dan menanggapi jika diperlukan.</p>
-      </div>
-    `;
-    await sendEmailToUser(userEmail, subject, html);
+    // EMAIL DIHAPUS — karena notifikasi sudah dilakukan lewat PUT /status
 
     return response(
       200,
       { id_pengaduan: id },
-      "Tanggapan dikirim dan user diberi notifikasi",
+      "Tanggapan berhasil disimpan",
       res
     );
   } catch (err) {
@@ -311,6 +301,7 @@ router.post("/:id/reply", auth, async (req, res) => {
     return response(500, null, "Gagal mengirim tanggapan", res);
   }
 });
+
 
 // DELETE pengaduan yang berstatus 'Tidak Valid' (admin/petugas only) + kirim email notifikasi reject
 router.delete("/:id/delete-invalid", auth, async (req, res) => {

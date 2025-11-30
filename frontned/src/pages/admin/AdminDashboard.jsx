@@ -61,9 +61,9 @@ export default function AdminDashboard() {
     setIsModalOpen(true);
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (id, newStatus, tanggapan_opsional) => {
     try {
-      const res = await apiClient.put(`/pengaduan/${id}/status`, { status: newStatus });
+      const res = await apiClient.put(`/pengaduan/${id}/status`, { status: newStatus, tanggapan_opsional });
       
       setPengaduan((prev) =>
         prev.map((p) =>

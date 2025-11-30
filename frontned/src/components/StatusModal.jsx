@@ -7,6 +7,9 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+  // tambahan
+  const [tanggapan, setTanggapan] = useState("");
+
   // Keep selectedStatus in sync when pengaduan prop changes
   useEffect(() => {
     setSelectedStatus(pengaduan?.status || "");
@@ -20,11 +23,36 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
 
     setIsLoading(true);
     try {
-      await onStatusChange(pengaduan?.id_pengaduan, selectedStatus);
+      // LOGIKA ASLI — tidak diubah
+      await onStatusChange(pengaduan?.id_pengaduan, selectedStatus, tanggapan);
+
+      // ===============================
+      //   TAMBAHAN: KIRIM TANGGAPAN
+      // ===============================
+      if (tanggapan.trim() !== "") {
+        try {
+          await fetch(
+            `http://localhost:5000/api/pengaduan/${pengaduan.id_pengaduan}/reply`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ isi_tanggapan: tanggapan }),
+            }
+          );
+        } catch (err) {
+          console.error("Gagal mengirim tanggapan:", err);
+        }
+      }
+      // ===============================
+
       setSuccessMessage("Status berhasil diubah!");
       setTimeout(() => {
         onClose();
         setSuccessMessage("");
+        setTanggapan(""); // reset tanggapan
       }, 1000);
     } catch (err) {
       console.error("Error:", err);
@@ -45,11 +73,13 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
   return (
     <div className="fixed inset-0 bg-black/20 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
-        {/* Header dengan Close Button */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Ubah Status Pengaduan</h2>
-            <p className="text-gray-500 text-sm mt-1">ID Pengaduan: <span className="font-semibold text-gray-700">#{pengaduan.id_pengaduan}</span></p>
+            <p className="text-gray-500 text-sm mt-1">
+              ID Pengaduan: <span className="font-semibold text-gray-700">#{pengaduan.id_pengaduan}</span>
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -59,7 +89,7 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           </button>
         </div>
 
-        {/* Success Message */}
+        {/* Success */}
         {successMessage && (
           <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
             <CheckCircle size={20} className="text-green-600" />
@@ -67,7 +97,7 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           </div>
         )}
 
-        {/* Detail Pengaduan */}
+        {/* Detail */}
         <div className="bg-linear-to-br from-gray-50 to-gray-100 p-6 rounded-lg mb-6 border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -117,7 +147,7 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           </div>
         </div>
 
-        {/* Gambar Pengaduan */}
+        {/* Gambar */}
         {pengaduan.foto && (
           <div className="mb-6">
             <p className="text-gray-800 font-semibold mb-2 text-xs uppercase tracking-wider">Lampiran Gambar</p>
@@ -126,18 +156,14 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
                 src={`http://localhost:5000/uploads/${pengaduan.foto}`}
                 alt="Bukti Pengaduan"
                 className="max-w-full max-h-80 rounded-lg object-contain shadow-md"
-                onError={(e) => {
-                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%23f3f4f6' width='200' height='200'/%3E%3Ctext x='50%' y='50%' font-size='14' fill='%236b7280' text-anchor='middle' dy='.3em'%3EGambar tidak ditemukan%3C/text%3E%3C/svg%3E";
-                }}
               />
             </div>
           </div>
         )}
 
-        {/* Separator */}
         <div className="border-t border-gray-200 my-6"></div>
 
-        {/* Status Selection */}
+        {/* Status Options */}
         <div className="mb-6">
           <p className="text-gray-800 font-semibold mb-4">Pilih Status Baru</p>
           <div className="space-y-3">
@@ -173,6 +199,20 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           </div>
         </div>
 
+        {/* ============================== */}
+        {/*     TEXTAREA TANGGAPAN BARU     */}
+        {/* ============================== */}
+        <div className="mb-6 mt-4">
+          <p className="text-gray-800 font-semibold mb-2 text-sm">Tanggapan Admin (opsional)</p>
+          <textarea
+            value={tanggapan}
+            onChange={(e) => setTanggapan(e.target.value)}
+            placeholder="Tulis tanggapan untuk dikirim ke pelapor..."
+            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500"
+            rows={4}
+          ></textarea>
+        </div>
+
         {/* Actions */}
         <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
           <button
@@ -182,6 +222,7 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           >
             Batal
           </button>
+
           <button
             onClick={handleSubmit}
             disabled={isLoading || selectedStatus === pengaduan?.status}
