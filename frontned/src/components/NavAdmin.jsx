@@ -16,11 +16,11 @@ function NavAdmin() {
     nav("/login");
   };
 
-  // ACTIVE ITEM (sama seperti sidebar masyarakat)
+  // ACTIVE ITEM 
   const activeClass =
     "bg-indigo-100/70 text-indigo-700 border-l-4 border-indigo-400 shadow-sm font-semibold";
 
-  // HOVER ITEM (sama seperti masyarakat)
+  // HOVER ITEM 
   const hoverItem =
     "hover:bg-indigo-50/70 hover:scale-[1.02] cursor-pointer transition-all duration-200";
 
