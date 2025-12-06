@@ -27,7 +27,11 @@ function DetailItem({ label, value, multiline }) {
   return (
     <div className="border p-3 rounded bg-gray-50">
       <div className="text-xs text-gray-500">{label}</div>
-      <div className={`mt-1 text-gray-800 ${multiline ? "whitespace-pre-wrap" : ""}`}>
+      <div
+        className={`mt-1 text-gray-800 ${
+          multiline ? "whitespace-pre-wrap" : ""
+        }`}
+      >
         {value ?? "-"}
       </div>
     </div>
@@ -79,11 +83,14 @@ export default function ListAduan() {
       id_pengaduan: selectedComplaint.id_pengaduan,
       nik: selectedComplaint.nik || "",
       judul_pengaduan: selectedComplaint.judul_pengaduan || "",
-      tgl_pengaduan: selectedComplaint.tgl_pengaduan || selectedComplaint.created_at || "",
+      tgl_pengaduan:
+        selectedComplaint.tgl_pengaduan || selectedComplaint.created_at || "",
       status: selectedComplaint.status || "Menunggu",
       isi_laporan: selectedComplaint.isi_laporan || "",
       foto: null,
-      fotoPreview: selectedComplaint.foto ? `http://localhost:5000/uploads/${selectedComplaint.foto}` : null,
+      fotoPreview: selectedComplaint.foto
+        ? `http://localhost:5000/uploads/${selectedComplaint.foto}`
+        : null,
     });
     setEditErrors({});
     setFileError("");
@@ -104,7 +111,13 @@ export default function ListAduan() {
       setEditForm((s) => ({ ...s, foto: null, fotoPreview: null }));
       return;
     }
-    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"];
+    const allowed = [
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "image/gif",
+      "image/webp",
+    ];
     if (!allowed.includes(f.type)) {
       setFileError("Tipe file tidak valid. Hanya gambar (jpg/png/gif/webp).");
       return;
@@ -186,13 +199,18 @@ export default function ListAduan() {
         tgl_pengaduan: updated.tgl_pengaduan ?? editForm.tgl_pengaduan,
         status: updated.status ?? editForm.status,
         isi_laporan: updated.isi_laporan ?? editForm.isi_laporan,
-        foto: updated.foto ?? (editForm.foto && editForm.foto.name) ?? selectedComplaint.foto ?? null,
+        foto:
+          updated.foto ??
+          (editForm.foto && editForm.foto.name) ??
+          selectedComplaint.foto ??
+          null,
       };
 
       // Update local state: complaints and filteredComplaints
       setComplaints((prev) =>
         prev.map((it) =>
-          (it.id_pengaduan ?? it.id) === (updatedObj.id_pengaduan ?? editForm.id_pengaduan)
+          (it.id_pengaduan ?? it.id) ===
+          (updatedObj.id_pengaduan ?? editForm.id_pengaduan)
             ? { ...it, ...updatedObj }
             : it
         )
@@ -200,7 +218,8 @@ export default function ListAduan() {
 
       setFilteredComplaints((prev) =>
         prev.map((it) =>
-          (it.id_pengaduan ?? it.id) === (updatedObj.id_pengaduan ?? editForm.id_pengaduan)
+          (it.id_pengaduan ?? it.id) ===
+          (updatedObj.id_pengaduan ?? editForm.id_pengaduan)
             ? { ...it, ...updatedObj }
             : it
         )
@@ -226,12 +245,12 @@ export default function ListAduan() {
       try {
         setLoading(true);
         const res = await apiClient.get("/masyarakat/pengaduan");
-        
+
         // Handle both response formats
         const pengaduan = Array.isArray(res.data)
           ? res.data[0]?.payload || []
-          : (res.data.payload || res.data.data || []);
-        
+          : res.data.payload || res.data.data || [];
+
         setComplaints(Array.isArray(pengaduan) ? pengaduan : []);
       } catch (err) {
         console.error("Error fetching pengaduan:", err);
@@ -259,17 +278,21 @@ export default function ListAduan() {
       const res = await apiClient.post(`/pengaduan/${id}/confirm-complete`);
       // handle response wrapper
       const data = res.data || res;
-      Swal.fire({ icon: "success", text: data.message || "Berhasil ditandai selesai" });
+      Swal.fire({
+        icon: "success",
+        text: data.message || "Berhasil ditandai selesai",
+      });
       // refresh list
       setLoading(true);
       const r = await apiClient.get("/masyarakat/pengaduan");
       const pengaduan = Array.isArray(r.data)
         ? r.data[0]?.payload || []
-        : (r.data.payload || r.data.data || []);
+        : r.data.payload || r.data.data || [];
       setComplaints(Array.isArray(pengaduan) ? pengaduan : []);
     } catch (err) {
       console.error(err);
-      const msg = err.response?.data?.message || err.message || "Gagal menandai selesai";
+      const msg =
+        err.response?.data?.message || err.message || "Gagal menandai selesai";
       Swal.fire({ icon: "error", text: msg });
     } finally {
       setLoading(false);
@@ -292,9 +315,13 @@ export default function ListAduan() {
 
     // Sort
     if (sortBy === "terbaru") {
-      filtered.sort((a, b) => new Date(b.tgl_pengaduan) - new Date(a.tgl_pengaduan));
+      filtered.sort(
+        (a, b) => new Date(b.tgl_pengaduan) - new Date(a.tgl_pengaduan)
+      );
     } else if (sortBy === "terlama") {
-      filtered.sort((a, b) => new Date(a.tgl_pengaduan) - new Date(b.tgl_pengaduan));
+      filtered.sort(
+        (a, b) => new Date(a.tgl_pengaduan) - new Date(b.tgl_pengaduan)
+      );
     }
 
     setFilteredComplaints(filtered);
@@ -302,9 +329,9 @@ export default function ListAduan() {
 
   const getStatusColor = (status) => {
     const colors = {
-      "Menunggu": "bg-blue-100 text-blue-700 border-blue-300",
-      "Diproses": "bg-yellow-100 text-yellow-700 border-yellow-300",
-      "Selesai": "bg-green-100 text-green-700 border-green-300",
+      Menunggu: "bg-blue-100 text-blue-700 border-blue-300",
+      Diproses: "bg-yellow-100 text-yellow-700 border-yellow-300",
+      Selesai: "bg-green-100 text-green-700 border-green-300",
       "Tidak Valid": "bg-red-100 text-red-700 border-red-300",
     };
     return colors[status] || "bg-gray-100 text-gray-700";
@@ -315,91 +342,135 @@ export default function ListAduan() {
     return new Date(dateString).toLocaleDateString("id-ID", options);
   };
 
-  // Fungsi download PDF elegan
+  // Fungsi download PDF standar
   const handleDownloadOnePDF = async (p) => {
     const doc = new jsPDF();
-    const orange = [230, 120, 30];
-    const gray = [80, 80, 80];
+    const black = [0, 0, 0];
 
-    // Header oranye
-    doc.setFillColor(...orange);
-    doc.rect(0, 0, 210, 30, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
+    // KOP LAPORAN
     doc.setFont("helvetica", "bold");
-    doc.text("LAPORAN PENGADUAN MASYARAKAT", 105, 18, { align: "center" });
+    doc.setFontSize(16);
+    doc.text("PEMERINTAH KECAMATAN PECANGGAN", 105, 15, { align: "center" });
 
-    // Tanggal cetak
+    doc.setFontSize(14);
+    doc.text("DINAS PELAYANAN PENGADUAN MASYARAKAT", 105, 22, {
+      align: "center",
+    });
+
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(...gray);
-    doc.setFontSize(11);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`, 14, 40);
+    doc.setFontSize(10);
+    doc.text("Jl.Jepara No.23, Indonesia | Telp: (0000) 123456", 105, 28, {
+      align: "center",
+    });
 
+    doc.setDrawColor(...black);
+    doc.line(20, 32, 190, 32);
+
+    // JUDUL
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("LAPORAN PENGADUAN MASYARAKAT", 105, 45, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(
+      `Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`,
+      20,
+      55
+    );
+
+    // DATA PENGADUAN
     const data = [
       ["ID Pengaduan", `#${p.id_pengaduan}`],
-      ["NIK Pelapor", p.nik || "-"],
-      ["Nama Pelapor", p.nama || "-"],
-      ["Tanggal Pengaduan", formatDate(p.tgl_pengaduan)],
+      ["NIK", p.nik || "-"],
+      ["Nama", p.nama || "-"],
+      ["Tanggal Pengaduan",p.tgl_pengaduan? new Date(p.tgl_pengaduan).toLocaleDateString("id-ID"): "-",],
       ["Status", p.status || "-"],
       ["Judul Pengaduan", p.judul_pengaduan || "-"],
-      ["Isi Laporan", p.isi_laporan || p.isi || "-"],
     ];
 
-    let y = 55;
-    let contentHeight = 0;
-    data.forEach(([label, value]) => {
-      const lines = doc.splitTextToSize(value, 120);
-      contentHeight += 10 + (lines.length - 1) * 5;
-    });
-    const hasPhoto = !!p.foto;
-    if (hasPhoto) contentHeight += 80;
-    const boxHeight = contentHeight + 20;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("A. DATA PENGADUAN", 20, 70);
 
-    doc.setDrawColor(...orange);
-    doc.roundedRect(10, 45, 190, boxHeight, 3, 3);
+    let y = 78;
+    const rowHeight = 8;
+
+    const labelX = 25;
+    const colonX = 70;
+    const valueX = 78;
 
     data.forEach(([label, value]) => {
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(20, y - 6, 150, rowHeight);
+
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(...orange);
-      doc.text(`${label}:`, 16, y);
+      doc.setFontSize(9);
+      doc.text(label, labelX, y);
+
+      doc.text(":", colonX, y);
+
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(0, 0, 0);
-      const lines = doc.splitTextToSize(value, 120);
-      doc.text(lines, 70, y);
-      y += 10 + (lines.length - 1) * 5;
+      const lines = doc.splitTextToSize(value, 80);
+      doc.text(lines, valueX, y);
+
+      const extraHeight = (lines.length - 1) * 4.8;
+      y += rowHeight + extraHeight;
     });
 
-    // Tambahkan foto bukti (jika ada)
-    if (hasPhoto) {
-      const imageUrl = `http://localhost:5000/uploads/${p.foto}`;
-      const base64Image = await getBase64FromUrl(imageUrl);
-      if (base64Image) {
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...orange);
-        doc.text("Foto Bukti:", 16, y + 10);
-        doc.addImage(base64Image, "JPEG", 16, y + 15, 70, 50);
-        y += 70;
+    // ISI LAPORAN
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("B. ISI LAPORAN", 20, y + 10);
+
+    y += 18;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+
+    const isi = p.isi_laporan || p.isi || "-";
+    const isiLines = doc.splitTextToSize(isi, 165);
+    doc.text(isiLines, 25, y);
+
+    y += isiLines.length * 6 + 10;
+
+    // FOTO BUKTI
+    if (p.foto) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("C. FOTO BUKTI", 20, y);
+
+      const imgY = y + 8;
+      const base64 = await getBase64FromUrl(
+        `http://localhost:5000/uploads/${p.foto}`
+      );
+
+      if (base64) {
+        doc.addImage(base64, "JPEG", 25, imgY, 60, 45);
+        y = imgY + 55;
       }
     }
 
-    // Footer tanda tangan
-    doc.setDrawColor(...orange);
-    doc.line(10, 45 + boxHeight + 10, 200, 45 + boxHeight + 10);
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(10);
-    doc.setTextColor(...gray);
-    doc.text("Mengetahui,", 140, 45 + boxHeight + 25);
-    doc.text("Pelapor", 140, 45 + boxHeight + 55);
-    doc.line(140, 45 + boxHeight + 56, 190, 45 + boxHeight + 56);
+    // BLOK TTD PELAPOR
+    const signY = 235;
 
-    // Footer kecil
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("Hormat Saya,", 150, signY + 2);
+
+    // Garis tanda tangan
+    doc.line(135, signY + 30, 180, signY + 30);
+
+    // FOOTER
     doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(120, 120, 120);
     doc.text(
       "Sistem Pelaporan Pengaduan Masyarakat - Generated Automatically",
       105,
       285,
-      { align: "center" }
+      {
+        align: "center",
+      }
     );
 
     doc.save(`laporan_pengaduan_${p.id_pengaduan}.pdf`);
@@ -411,14 +482,18 @@ export default function ListAduan() {
 
       <main className="ml-64 w-full p-8">
         <div className="flex items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Riwayat Semua Pengaduan</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Riwayat Semua Pengaduan
+          </h1>
         </div>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow p-4">
             <p className="text-gray-600 text-sm">Total Pengaduan</p>
-            <p className="text-2xl font-bold text-gray-800">{complaints.length}</p>
+            <p className="text-2xl font-bold text-gray-800">
+              {complaints.length}
+            </p>
           </div>
           <div className="bg-white rounded-lg shadow p-4">
             <p className="text-gray-600 text-sm">Menunggu</p>
@@ -445,7 +520,10 @@ export default function ListAduan() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search NIK */}
             <div className="relative">
-              <Search size={20} className="absolute left-3 top-3 text-gray-400" />
+              <Search
+                size={20}
+                className="absolute left-3 top-3 text-gray-400"
+              />
               <input
                 type="text"
                 placeholder="Cari NIK..."
@@ -522,10 +600,18 @@ export default function ListAduan() {
                   <tr>
                     <th className="px-6 py-3 text-center font-semibold">No</th>
                     <th className="px-6 py-3 text-center font-semibold">NIK</th>
-                    <th className="px-6 py-3 text-center font-semibold">Judul</th>
-                    <th className="px-6 py-3 text-center font-semibold">Tanggal</th>
-                    <th className="px-6 py-3 text-center font-semibold">Status</th>
-                    <th className="px-6 py-3 text-center font-semibold">Aksi</th>
+                    <th className="px-6 py-3 text-center font-semibold">
+                      Judul
+                    </th>
+                    <th className="px-6 py-3 text-center font-semibold">
+                      Tanggal
+                    </th>
+                    <th className="px-6 py-3 text-center font-semibold">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-center font-semibold">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -556,13 +642,19 @@ export default function ListAduan() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-2 items-center flex-wrap">
                           {complaint.status === "Selesai" ? (
-                            complaint.is_locked === 1 || complaint.is_locked === true ? (
+                            complaint.is_locked === 1 ||
+                            complaint.is_locked === true ? (
                               <div className="text-sm text-green-700">
-                                Dikunci • {complaint.tanggal_tandai_selesai ? formatDate(complaint.tanggal_tandai_selesai) : "-"}
+                                Dikunci •{" "}
+                                {complaint.tanggal_tandai_selesai
+                                  ? formatDate(complaint.tanggal_tandai_selesai)
+                                  : "-"}
                               </div>
                             ) : (
                               <button
-                                onClick={() => handleConfirmComplete(complaint.id_pengaduan)}
+                                onClick={() =>
+                                  handleConfirmComplete(complaint.id_pengaduan)
+                                }
                                 className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                               >
                                 Tandai Selesai
@@ -580,7 +672,7 @@ export default function ListAduan() {
                             Download
                           </button>
 
-                          {/* Lihat Detail button (ditambahkan, tidak mengubah logika lain) */}
+                          {/* Lihat Detail button */}
                           <button
                             onClick={() => openDetailModal(complaint)}
                             className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-all whitespace-nowrap"
@@ -617,19 +709,27 @@ export default function ListAduan() {
                   <p className="font-semibold text-gray-800 mb-2">
                     {complaint.judul_pengaduan}
                   </p>
-                  <p className="text-sm text-gray-600 mb-1">NIK: {complaint.nik}</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    NIK: {complaint.nik}
+                  </p>
                   <p className="text-sm text-gray-600">
                     Tanggal: {formatDate(complaint.tgl_pengaduan)}
                   </p>
                   <div className="mt-3 flex flex-col gap-2">
                     {complaint.status === "Selesai" ? (
-                      complaint.is_locked === 1 || complaint.is_locked === true ? (
+                      complaint.is_locked === 1 ||
+                      complaint.is_locked === true ? (
                         <div className="text-sm text-green-700">
-                          Dikunci • {complaint.tanggal_tandai_selesai ? formatDate(complaint.tanggal_tandai_selesai) : "-"}
+                          Dikunci •{" "}
+                          {complaint.tanggal_tandai_selesai
+                            ? formatDate(complaint.tanggal_tandai_selesai)
+                            : "-"}
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleConfirmComplete(complaint.id_pengaduan)}
+                          onClick={() =>
+                            handleConfirmComplete(complaint.id_pengaduan)
+                          }
                           className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                         >
                           Tandai Selesai
@@ -662,14 +762,14 @@ export default function ListAduan() {
 
         {/* Pagination Info */}
         <div className="mt-6 text-center text-gray-600 text-sm">
-          Menampilkan {filteredComplaints.length} dari {complaints.length} pengaduan
+          Menampilkan {filteredComplaints.length} dari {complaints.length}{" "}
+          pengaduan
         </div>
       </main>
 
-      {/* ============== MODAL DETAIL (DIGABUNGKAN) ============== */}
+      {/* MODAL DETAIL  */}
       {isModalOpen && selectedComplaint && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-6">
-
           {/* Background Overlay */}
           <div
             className="absolute inset-0 bg-black/60 transition-opacity duration-200"
@@ -679,7 +779,6 @@ export default function ListAduan() {
           {/* Modal Box */}
           <div className="relative w-full max-w-3xl transform transition-all duration-200 opacity-100 scale-100">
             <div className="bg-white rounded-xl shadow-2xl overflow-auto max-h-[90vh]">
-
               {/* Header */}
               <div className="p-6 border-b flex items-start justify-between">
                 <div>
@@ -703,17 +802,19 @@ export default function ListAduan() {
               {/* Body */}
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
                   {/* ----------- KIRI: Foto + Status + Lokasi ----------- */}
                   <div className="space-y-4">
-
                     {/* Foto */}
                     {selectedComplaint.foto ? (
                       <img
                         src={`http://localhost:5000/uploads/${selectedComplaint.foto}`}
-                        alt={selectedComplaint.judul_pengaduan || "Foto pengaduan"}
+                        alt={
+                          selectedComplaint.judul_pengaduan || "Foto pengaduan"
+                        }
                         className="w-full h-64 object-cover rounded-md border"
-                        onError={(e) => { e.currentTarget.src = ""; }}
+                        onError={(e) => {
+                          e.currentTarget.src = "";
+                        }}
                       />
                     ) : (
                       <div className="w-full h-64 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 border">
@@ -734,20 +835,21 @@ export default function ListAduan() {
                       <div className="text-sm text-gray-600">
                         {selectedComplaint.tgl_pengaduan
                           ? formatDate(selectedComplaint.tgl_pengaduan)
-                          : (selectedComplaint.created_at ?? "-")}
+                          : selectedComplaint.created_at ?? "-"}
                       </div>
                     </div>
 
                     {/* Lokasi */}
                     <div>
                       <h4 className="text-sm text-gray-500">Lokasi</h4>
-                      <p className="text-gray-800">{selectedComplaint.lokasi || "-"}</p>
+                      <p className="text-gray-800">
+                        {selectedComplaint.lokasi || "-"}
+                      </p>
                     </div>
                   </div>
 
                   {/* ----------- KANAN: Detail Informasi ----------- */}
                   <div className="space-y-4">
-
                     <div className="border p-3 rounded bg-gray-50">
                       <div className="text-xs text-gray-500">ID Pengaduan</div>
                       <div className="mt-1 text-gray-800">
@@ -756,7 +858,9 @@ export default function ListAduan() {
                     </div>
 
                     <div className="border p-3 rounded bg-gray-50">
-                      <div className="text-xs text-gray-500">Judul Pengaduan</div>
+                      <div className="text-xs text-gray-500">
+                        Judul Pengaduan
+                      </div>
                       <div className="mt-1 text-gray-800">
                         {selectedComplaint.judul_pengaduan}
                       </div>
@@ -770,15 +874,20 @@ export default function ListAduan() {
                     </div>
 
                     <div className="border p-3 rounded bg-gray-50">
-                      <div className="text-xs text-gray-500">Foto (filename)</div>
-                      <div className="mt-1 text-gray-800">{selectedComplaint.foto || "-"}</div>
+                      <div className="text-xs text-gray-500">
+                        Foto (filename)
+                      </div>
+                      <div className="mt-1 text-gray-800">
+                        {selectedComplaint.foto || "-"}
+                      </div>
                     </div>
 
                     <div className="border p-3 rounded bg-gray-50">
                       <div className="text-xs text-gray-500">Created At</div>
-                      <div className="mt-1 text-gray-800">{selectedComplaint.created_at || "-"}</div>
+                      <div className="mt-1 text-gray-800">
+                        {selectedComplaint.created_at || "-"}
+                      </div>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -792,12 +901,11 @@ export default function ListAduan() {
                   Edit
                 </button>
               </div>
-
             </div>
           </div>
         </div>
       )}
-      {/* ============== END MODAL DETAIL ============== */}
+     
 
       {/* ============== EDIT MODAL ============== */}
       {isEditOpen && (
@@ -810,15 +918,26 @@ export default function ListAduan() {
           <div className="relative w-full max-w-2xl transform transition-all duration-200 opacity-100 scale-100">
             <div className="bg-white rounded-xl shadow-2xl overflow-auto max-h-[90vh]">
               <div className="p-6 border-b flex items-center justify-between">
-                <h3 className="text-xl font-semibold">Edit Pengaduan #{editForm.id_pengaduan}</h3>
-                <button onClick={closeEditModal} className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">Batal</button>
+                <h3 className="text-xl font-semibold">
+                  Edit Pengaduan #{editForm.id_pengaduan}
+                </h3>
+                <button
+                  onClick={closeEditModal}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Batal
+                </button>
               </div>
 
               <form onSubmit={saveEdit} className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs text-gray-600">NIK</label>
-                    <input readOnly value={editForm.nik} className="mt-1 w-full border border-gray-300 rounded px-3 py-2 bg-gray-50" />
+                    <input
+                      readOnly
+                      value={editForm.nik}
+                      className="mt-1 w-full border border-gray-300 rounded px-3 py-2 bg-gray-50"
+                    />
                   </div>
 
                   <div>
@@ -830,19 +949,29 @@ export default function ListAduan() {
                       onChange={handleEditChange}
                       className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
                     />
-                    {editErrors.tgl_pengaduan && <p className="text-sm text-red-600 mt-1">{editErrors.tgl_pengaduan}</p>}
+                    {editErrors.tgl_pengaduan && (
+                      <p className="text-sm text-red-600 mt-1">
+                        {editErrors.tgl_pengaduan}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-600">Judul Pengaduan</label>
+                  <label className="text-xs text-gray-600">
+                    Judul Pengaduan
+                  </label>
                   <input
                     name="judul_pengaduan"
                     value={editForm.judul_pengaduan}
                     onChange={handleEditChange}
                     className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
                   />
-                  {editErrors.judul_pengaduan && <p className="text-sm text-red-600 mt-1">{editErrors.judul_pengaduan}</p>}
+                  {editErrors.judul_pengaduan && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {editErrors.judul_pengaduan}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -858,29 +987,55 @@ export default function ListAduan() {
                     onChange={handleEditChange}
                     className="mt-1 w-full border border-gray-300 rounded px-3 py-2 min-h-[120px]"
                   />
-                  {editErrors.isi_laporan && <p className="text-sm text-red-600 mt-1">{editErrors.isi_laporan}</p>}
+                  {editErrors.isi_laporan && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {editErrors.isi_laporan}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="text-xs text-gray-600">Unggah Foto (opsional, max 5MB)</label>
-                  <input type="file" accept="image/*" onChange={handleFileSelect} className="mt-2" />
-                  {fileError && <p className="text-sm text-red-600 mt-1">{fileError}</p>}
+                  <label className="text-xs text-gray-600">
+                    Unggah Foto (opsional, max 5MB)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="mt-2"
+                  />
+                  {fileError && (
+                    <p className="text-sm text-red-600 mt-1">{fileError}</p>
+                  )}
                   {editForm.fotoPreview && (
                     <div className="mt-3">
                       <div className="text-sm text-gray-700">Preview:</div>
-                      <img src={editForm.fotoPreview} alt="preview" className="max-h-36 rounded mt-2 border" />
+                      <img
+                        src={editForm.fotoPreview}
+                        alt="preview"
+                        className="max-h-36 rounded mt-2 border"
+                      />
                     </div>
                   )}
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <button type="button" onClick={closeEditModal} className="px-4 py-2 rounded border">Batal</button>
-                  <button type="submit" disabled={savingEdit} className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700">
+                  <button
+                    type="button"
+                    onClick={closeEditModal}
+                    className="px-4 py-2 rounded border"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingEdit}
+                    className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                  >
                     {savingEdit ? "Menyimpan..." : "Simpan"}
                   </button>
                 </div>
               </form>
-
             </div>
           </div>
         </div>

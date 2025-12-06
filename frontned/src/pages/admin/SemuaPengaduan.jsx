@@ -10,6 +10,7 @@ import StatusModal from "../../components/StatusModal";
 import { deleteInvalidPengaduan } from "../../services/api";
 import { GrFormTrash } from "react-icons/gr";
 import { FaWpforms } from "react-icons/fa6";
+import Stempel from "../../assets/img/Stempel.png"
 
 // Fungsi bantu untuk mengambil foto dari URL dan ubah ke Base64
 const getBase64FromUrl = async (url) => {
@@ -157,98 +158,167 @@ function SemuaPengaduan() {
     }
   }
 
-  // Fungsi Stylish PDF Laporan Detail (foto di dalam kotak)
-  const handleDownloadOnePDF = async (p) => {
-    const doc = new jsPDF();
-    const orange = [230, 120, 30];
-    const gray = [80, 80, 80];
+// PDF RESMI PEMERINTAH
+const handleDownloadOnePDF = async (p) => {
+  const doc = new jsPDF();
+  const black = [0, 0, 0];
 
-    // Header oranye
-    doc.setFillColor(...orange);
-    doc.rect(0, 0, 210, 30, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
+  // 1. KOP SURAT PEMERINTAH
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(...black);
+  doc.text("PEMERINTAH KECAMATAN PECANGGAN", 105, 15, { align: "center" });
+
+  doc.setFontSize(13);
+  doc.text("DINAS PELAYANAN PENGADUAN MASYARAKAT", 105, 21, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(
+    "Jl. Jepara No. 23, Indonesia | Telp. (0000) 123456",
+    105,
+    27,
+    { align: "center" }
+  );
+
+  // Garis
+  doc.setLineWidth(1.5);
+  doc.line(20, 32, 190, 32); // tebal
+
+  doc.setLineWidth(0.5);
+  doc.line(20, 34, 190, 34); // tipis
+
+  // JUDUL DOKUMEN
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.text("LAPORAN PENGADUAN MASYARAKAT", 105, 48, { align: "center" });
+
+  // Tanggal cetak
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`, 25, 58);
+
+  // DATA LAPORAN
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("A. DATA PENGADUAN", 20, 70);
+
+  let y = 78;
+  const rowHeight = 8;
+  const labelX = 25;
+  const colonX = 70;
+  const valueX = 78;
+
+  const data = [
+    ["ID Pengaduan", `#${p.id_pengaduan}`],
+    ["NIK", p.nik || "-"],
+    ["Nama", p.nama || "-"],
+    [
+      "Tanggal Pengaduan",
+      p.tgl_pengaduan
+        ? new Date(p.tgl_pengaduan).toLocaleDateString("id-ID")
+        : "-"
+    ],
+    ["Status", p.status || "-"],
+    ["Judul Pengaduan", p.judul_pengaduan || "-"],
+  ];
+
+  data.forEach(([label, value]) => {
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(20, y - 6, 150, rowHeight);
+
     doc.setFont("helvetica", "bold");
-    doc.text("LAPORAN PENGADUAN MASYARAKAT", 105, 18, { align: "center" });
+    doc.setFontSize(9);
+    doc.text(label, labelX, y);
 
-    // Tanggal cetak
+    doc.text(":", colonX, y);
+
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(...gray);
+    const lines = doc.splitTextToSize(value, 80);
+    doc.text(lines, valueX, y);
+
+    const extraHeight = (lines.length - 1) * 4.8;
+    y += rowHeight + extraHeight;
+  });
+
+  // ISI LAPORAN
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("B. ISI LAPORAN", 20, y + 10);
+
+  y += 18;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  const isiLines = doc.splitTextToSize(
+    p.isi_laporan || p.isi || "-",
+    165
+  );
+
+  doc.text(isiLines, 25, y);
+
+  y += isiLines.length * 6 + 10;
+
+  // FOTO BUKTI
+  if (p.foto) {
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString("id-ID")}`, 14, 40);
+    doc.text("C. FOTO BUKTI", 20, y);
 
-    doc.setFontSize(12);
-    const startY = 50;
-    let y = startY;
-
-    const data = [
-      ["ID Pengaduan", `#${p.id_pengaduan}`],
-      ["NIK Pelapor", p.nik || "-"],
-      ["Nama Pelapor", p.nama || "-"],
-      ["Tanggal Pengaduan", new Date(p.tgl_pengaduan).toLocaleDateString("id-ID")],
-      ["Status", p.status || "-"],
-      ["Judul Pengaduan", p.judul_pengaduan || "-"],
-      ["Isi Laporan", p.isi_laporan || p.isi || "-"],
-    ];
-
-    let contentHeight = 0;
-    data.forEach(([label, value]) => {
-      const lines = doc.splitTextToSize(value, 120);
-      contentHeight += 10 + (lines.length - 1) * 5;
-    });
-
-    const hasPhoto = !!p.foto;
-    if (hasPhoto) contentHeight += 80;
-
-    const boxHeight = contentHeight + 20;
-    doc.setDrawColor(...orange);
-    doc.roundedRect(10, 45, 190, boxHeight, 3, 3);
-
-    y = 55;
-    data.forEach(([label, value]) => {
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...orange);
-      doc.text(`${label}:`, 16, y);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(0, 0, 0);
-      const lines = doc.splitTextToSize(value, 120);
-      doc.text(lines, 70, y);
-      y += 10 + (lines.length - 1) * 5;
-    });
-
-    if (hasPhoto) {
-      const imageUrl = `http://localhost:5000/uploads/${p.foto}`;
-      const base64Image = await getBase64FromUrl(imageUrl);
-      if (base64Image) {
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...orange);
-        doc.text("Foto Bukti:", 16, y + 10);
-        doc.addImage(base64Image, "JPEG", 16, y + 15, 70, 50);
-        y += 70;
-      }
-    }
-
-    doc.setDrawColor(...orange);
-    doc.line(10, 45 + boxHeight + 10, 200, 45 + boxHeight + 10);
-
-    doc.setFont("helvetica", "italic");
-    doc.setFontSize(10);
-    doc.setTextColor(...gray);
-    doc.text("Mengetahui,", 140, 45 + boxHeight + 25);
-    doc.text("Petugas Penerima", 140, 45 + boxHeight + 55);
-    doc.line(140, 45 + boxHeight + 56, 190, 45 + boxHeight + 56);
-
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text(
-      "Sistem Pelaporan Pengaduan Masyarakat - Generated Automatically",
-      105,
-      285,
-      { align: "center" }
+    const imgY = y + 8;
+    const base64 = await getBase64FromUrl(
+      `http://localhost:5000/uploads/${p.foto}`
     );
 
-    doc.save(`laporan_pengaduan_${p.id_pengaduan}.pdf`);
-  };
+    if (base64) {
+      doc.addImage(base64, "JPEG", 25, imgY, 60, 45);
+      y = imgY + 60;
+    }
+  }
+
+// TANDA TANGAN 
+const signY = 235;
+
+doc.setFont("helvetica", "bold");
+doc.setFontSize(10);
+doc.text("Disetujui Oleh,", 145, signY);
+
+doc.setFont("helvetica", "normal");
+doc.text("Admin/Petugas,", 150, signY + 6);
+
+// STEMPEL
+try {
+  doc.addImage(
+    Stempel,
+    "PNG",
+    125,           
+    signY + 8,     
+    34,            // ukuran stempel
+    34
+  );
+} catch (err) {
+  console.error("Stempel gagal dimuat:", err);
+}
+
+// Garis tanda tangan
+doc.line(130, signY + 38, 188, signY + 38);
+
+  // FOOTER 
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text(
+    "Sistem Pelaporan Pengaduan Masyarakat - Generated Automatically",
+    105,
+    285,
+    { align: "center" }
+  );
+
+  // Simpan file
+  doc.save(`laporan_pengaduan_${p.id_pengaduan}.pdf`);
+};
+
 
   useEffect(() => {
     fetchAllPengaduan();
@@ -441,7 +511,7 @@ function SemuaPengaduan() {
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-linear-to-r from-orange-600 to-orange-500 text-white">
+                <thead className="bg-gray-300 text-gray-700 ">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold">
                       ID

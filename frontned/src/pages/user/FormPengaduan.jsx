@@ -1,14 +1,23 @@
-import {
-  FileText,
-  Calendar,
-  Layers,
-  MessageCircle,
-  Image,
-  MapPin,
-} from "lucide-react";
+import { FileText, Calendar, MessageCircle, Image, MapPin } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Swal from "sweetalert2";
 import NavUser from "../../components/NavUser";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "leaflet-control-geocoder";
+import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
+import "leaflet-geosearch/dist/geosearch.css";
+import "leaflet-control-geocoder/dist/Control.Geocoder.css";
+
+// ICON LEAFLET
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+});
 
 export default function FormPengaduan() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -17,70 +26,106 @@ export default function FormPengaduan() {
     judul: "",
     tanggal: "",
     isi: "",
-    lokasi: "", // Added lokasi field
+    lokasi: "",
   });
 
   const [file, setFile] = useState(null);
   const fileRef = useRef(null);
+
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [selectedPos, setSelectedPos] = useState(null);
 
-  const handleOpenGoogleMaps = () => {
-    // Get user's current location first, then open Google Maps
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          // Open Google Maps with current location as center
-          const mapsUrl = 'https://www.google.com/maps/@${latitude},${longitude},15z';
-          window.open(mapsUrl, "_blank");
-          Swal.fire({
-            icon: "info",
-            title: "Pilih Lokasi",
-            html: "<p>Pilih lokasi di Google Maps, kemudian copy koordinat (klik marker) dan paste di field lokasi</p>",
-            confirmButtonColor: "#ea580c",
-          });
-        },
-        () => {
-          // If geolocation fails, open Google Maps without specific location
-          window.open("https://www.google.com/maps", "_blank");
-          Swal.fire({
-            icon: "info",
-            title: "Pilih Lokasi",
-            html: "<p>Pilih lokasi di Google Maps, kemudian copy koordinat dan paste di field lokasi</p><p><small>Format: latitude, longitude (contoh: -6.200000, 106.816666)</small></p>",
-            confirmButtonColor: "#ea580c",
-          });
-        }
-      );
-    } else {
-      window.open("https://www.google.com/maps", "_blank");
-      Swal.fire({
-        icon: "info",
-        title: "Pilih Lokasi",
-        html: "<p>Pilih lokasi di Google Maps, kemudian copy koordinat dan paste di field lokasi</p><p><small>Format: latitude, longitude (contoh: -6.200000, 106.816666)</small></p>",
-        confirmButtonColor: "#ea580c",
+  // AUTOCOMPLETE SEARCH 
+  function SearchControl({ setSelectedPos, setFilled }) {
+    const map = useMapEvents({});
+
+    useEffect(() => {
+      const provider = new OpenStreetMapProvider();
+
+      const searchControl = new GeoSearchControl({
+        provider: provider,
+        style: "bar",
+        autoComplete: true,
+        autoCompleteDelay: 200,
+        searchLabel: "Cari lokasi...",
+        keepResult: true,
+        showMarker: false,
       });
-    }
-  };
 
+      map.addControl(searchControl);
+
+      // hasil pencarian
+      map.on("geosearch/showlocation", (result) => {
+        const { x, y, label } = result.location;
+
+        // marker 
+        setSelectedPos([y, x]);
+
+        // isi otomatis alamat 
+        setFilled((prev) => ({
+          ...prev,
+          lokasi: label,
+        }));
+
+        map.setView([y, x], 17);
+      });
+
+      return () => map.removeControl(searchControl);
+    }, []);
+
+    return null;
+  }
+
+  // ambil ALAMAT OTOMATIS
+  function ClickMap() {
+    useMapEvents({
+      click: async (e) => {
+        const lat = e.latlng.lat.toFixed(6);
+        const lng = e.latlng.lng.toFixed(6);
+
+        setSelectedPos([lat, lng]);
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+          );
+          const data = await res.json();
+
+          setFilled((prev) => ({
+            ...prev,
+            lokasi: data.display_name || `${lat}, ${lng}`,
+          }));
+        } catch {
+          setFilled((prev) => ({
+            ...prev,
+            lokasi: `${lat}, ${lng}`,
+          }));
+        }
+      },
+    });
+
+    return null;
+  }
+
+
+  // SUBMIT
   const handleSubmit = async () => {
     if (!filled.judul || !filled.tanggal || !filled.isi || !filled.lokasi) {
-      Swal.fire({
+      return Swal.fire({
         icon: "error",
         title: "Validasi Error",
         text: "Semua field wajib diisi.",
         confirmButtonColor: "#ea580c",
       });
-      return;
     }
 
     if (!file) {
-      Swal.fire({
+      return Swal.fire({
         icon: "error",
         title: "Validasi Error",
         text: "Foto wajib diupload.",
         confirmButtonColor: "#ea580c",
       });
-      return;
     }
 
     const formData = new FormData();
@@ -88,40 +133,37 @@ export default function FormPengaduan() {
     formData.append("judul_pengaduan", filled.judul);
     formData.append("tgl_pengaduan", filled.tanggal);
     formData.append("isi_laporan", filled.isi);
-    formData.append("lokasi", filled.lokasi); // Added lokasi to formData
+    formData.append("lokasi", filled.lokasi);
     formData.append("foto", file);
 
     try {
       const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:5000/api/pengaduan", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       const data = await res.json();
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil!",
-          text: "Pengaduan berhasil dikirim!",
-          confirmButtonColor: "#ea580c",
-        });
-        setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" });
-        setFile(null);
-        if (fileRef.current) fileRef.current.value = "";
-      } else {
-        Swal.fire({
+      if (!data.success)
+        return Swal.fire({
           icon: "error",
           title: "Gagal",
           text: data.message || "Gagal mengirim pengaduan.",
           confirmButtonColor: "#ea580c",
         });
-      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Pengaduan berhasil dikirim!",
+        confirmButtonColor: "#ea580c",
+      });
+
+      setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" });
+      setFile(null);
+      if (fileRef.current) fileRef.current.value = "";
     } catch (err) {
-      console.error(err);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -131,45 +173,13 @@ export default function FormPengaduan() {
     }
   };
 
-  useEffect(() => {
-    let map, marker;
-    if (isMapOpen) {
-      map = new window.google.maps.Map(document.getElementById("map"), {
-        center: { lat: -6.2, lng: 106.816666 },
-        zoom: 13,
-      });
-
-      marker = new window.google.maps.Marker({
-        position: map.getCenter(),
-        map,
-        draggable: true,
-      });
-
-      marker.addListener("dragend", () => {
-        const position = marker.getPosition();
-        handleMapClick(position.lat(), position.lng());
-      });
-    }
-
-    return () => {
-      if (marker) {
-        window.google.maps.event.clearInstanceListeners(marker);
-      }
-      if (map) {
-        window.google.maps.event.clearInstanceListeners(map);
-      }
-    };
-  }, [isMapOpen]);
-
   return (
     <div className="flex min-h-screen bg-gray-50">
       <NavUser />
 
       <main className="ml-64 w-full min-h-screen bg-gray-100 p-10">
-        <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-md p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-200">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
-            Buat Pengaduan
-          </h1>
+        <div className="max-w-3xl mx-auto bg-white p-10 rounded-3xl shadow border border-gray-200">
+          <h1 className="text-3xl font-bold mb-1">Buat Pengaduan</h1>
           <p className="text-gray-500 mb-10">
             Silakan isi detail pengaduan dengan lengkap.
           </p>
@@ -188,44 +198,42 @@ export default function FormPengaduan() {
                 onChange={(e) =>
                   setFilled({ ...filled, judul: e.target.value })
                 }
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14"
               />
               <label
                 htmlFor="judul"
-                className={`absolute left-14 bg-white px-2 transition-all duration-200
-            ${
-              filled.judul
-                ? "-top-3 text-xs text-orange-600"
-                : "top-4 text-gray-400"
-            }`}
+                className={`absolute left-14 bg-white px-2 transition-all duration-200 ${
+                  filled.judul
+                    ? "-top-3 text-xs text-orange-600"
+                    : "top-4 text-gray-400"
+                }`}
               >
                 Judul Pengaduan
               </label>
             </div>
 
-            {/* TANGGAL */}
+            {/* Tanggal */}
             <div className="relative">
               <Calendar
                 className="absolute left-5 top-4 text-gray-700"
                 size={22}
               />
               <input
-                id="date"
+                id="tanggal"
                 type="date"
                 value={filled.tanggal}
                 onChange={(e) =>
                   setFilled({ ...filled, tanggal: e.target.value })
                 }
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14"
               />
               <label
-                htmlFor="date"
-                className={`absolute left-14 bg-white px-2 transition-all duration-200
-            ${
-              filled.tanggal
-                ? "-top-3 text-xs text-orange-600"
-                : "top-4 text-gray-400"
-            }`}
+                htmlFor="tanggal"
+                className={`absolute left-14 bg-white px-2 transition-all duration-200 ${
+                  filled.tanggal
+                    ? "-top-3 text-xs text-orange-600"
+                    : "top-4 text-gray-400"
+                }`}
               >
                 Tanggal Pengaduan
               </label>
@@ -242,16 +250,15 @@ export default function FormPengaduan() {
                 rows="6"
                 value={filled.isi}
                 onChange={(e) => setFilled({ ...filled, isi: e.target.value })}
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
-              ></textarea>
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14"
+              />
               <label
                 htmlFor="isi"
-                className={`absolute left-14 bg-white px-2 transition-all duration-200
-            ${
-              filled.isi
-                ? "-top-3 text-xs text-orange-600"
-                : "top-4 text-gray-400"
-            }`}
+                className={`absolute left-14 bg-white px-2 transition-all duration-200 ${
+                  filled.isi
+                    ? "-top-3 text-xs text-orange-600"
+                    : "top-4 text-gray-400"
+                }`}
               >
                 Isi Pengaduan
               </label>
@@ -267,11 +274,11 @@ export default function FormPengaduan() {
                 type="file"
                 ref={fileRef}
                 onChange={(e) => setFile(e.target.files[0])}
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 pl-14 py-2.5 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 pl-14 py-2.5"
               />
             </div>
 
-            {/* KOORDINAT */}
+            {/* LOKASI */}
             <div className="relative">
               <MapPin
                 className="absolute left-5 top-4 text-gray-700"
@@ -282,31 +289,29 @@ export default function FormPengaduan() {
                 id="lokasi"
                 type="text"
                 value={filled.lokasi}
-                onChange={(e) =>
-                  setFilled({ ...filled, lokasi: e.target.value })
-                }
-                placeholder="Latitude, Longitude (contoh: -6.200000, 106.816666)"
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14 focus:ring-2 focus:ring-orange-400 focus:border-orange-500 transition-all"
+                readOnly
+                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14"
+                placeholder="Klik tombol pilih lokasi → pilih titik di peta"
               />
 
               <label
                 htmlFor="lokasi"
-                className={`absolute left-14 bg-white px-2 transition-all duration-200
-            ${
-              filled.lokasi
-                ? "-top-3 text-xs text-orange-600"
-                : "top-4 text-gray-400"
-            }`}
+                className={`absolute left-14 bg-white px-2 transition-all duration-200 ${
+                  filled.lokasi
+                    ? "-top-3 text-xs text-orange-600"
+                    : "top-4 text-gray-400"
+                }`}
               >
-                Lokasi (Koordinat)
+                
               </label>
 
+              {/* OPEN MAP BUTTON */}
               <button
                 type="button"
-                onClick={handleOpenGoogleMaps}
-                className="absolute right-3 top-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 shadow-sm transition"
+                onClick={() => setIsMapOpen(true)}
+                className="absolute right-3 top-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
               >
-                Buka Maps
+                Pilih Lokasi
               </button>
             </div>
 
@@ -316,22 +321,59 @@ export default function FormPengaduan() {
                 onClick={() =>
                   setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" })
                 }
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl bg-red hover:bg-gray-100 transition"
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl"
               >
                 Reset
               </button>
 
               <button
                 onClick={handleSubmit}
-                className="px-8 py-3 bg-orange-600 text-white rounded-xl shadow hover:bg-orange-700 transition"
+                className="px-8 py-3 bg-orange-600 text-white rounded-xl"
               >
                 Kirim Pengaduan
               </button>
             </div>
-            
           </div>
         </div>
       </main>
+
+      {/* LEAFLET*/}
+      {isMapOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-xl shadow-xl w-[90%] max-w-2xl relative">
+            <h2 className="text-lg font-semibold mb-2">Pilih Lokasi</h2>
+
+            <div className="h-[350px] rounded overflow-hidden">
+              <MapContainer
+                center={[-6.2, 106.816666]}
+                zoom={13}
+                style={{ height: "100%", width: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+                {/* SEARCH BAR */}
+                <SearchControl
+                  setSelectedPos={setSelectedPos}
+                  setFilled={setFilled}
+                />
+
+                <ClickMap />
+
+                {selectedPos && <Marker position={selectedPos} />}
+              </MapContainer>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setIsMapOpen(false)}
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

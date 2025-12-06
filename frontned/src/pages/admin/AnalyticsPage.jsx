@@ -51,7 +51,7 @@ export default function AnalyticsPage() {
       <main className="ml-64 flex-1 p-8 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600">Analitik Pengaduan Lengkap</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Analitik Pengaduan Lengkap</h1>
         </div>
 
         {/* Quick Stats */}

@@ -97,6 +97,8 @@ export default function Register() {
             <input
               className="w-full py-2 border-b focus:ring-0 focus:outline-none"
               value={form.telp}
+              minLength={12}
+              maxLength={12}
               onChange={onChange("telp")}
               placeholder="Nomor telepon"
               required

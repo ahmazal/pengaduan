@@ -124,7 +124,7 @@ export default function AdminDashboard() {
 
   {/* MAIN CONTENT */}
   <main className="flex-1 p-4 md:p-10 md:ml-64 space-y-10">
-    <h1 className="text-xl md:text-3xl font-bold text-indigo-600 mb-4">
+    <h1 className="text-xl md:text-3xl font-bold text-slate-900 mb-4">
       Selamat datang, {user.nama_admin}
     </h1>
 
@@ -208,8 +208,8 @@ export default function AdminDashboard() {
                             : p.status === "Diproses"
                             ? "bg-yellow-500"
                             : p.status === "Selesai"
-                            ? "bg-green-600"
-                            : "bg-red-600"
+                            ? "bg-green-500"
+                            : "bg-red-500"
                         }
                       `}
                     >
