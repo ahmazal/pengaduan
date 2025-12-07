@@ -10,7 +10,7 @@ const genToken = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' })
 
 /**
  * Register masyarakat
- * body: { nik, nama, tglLahir, password, email, telp, alamat }
+ *{ nik, nama, tglLahir, password, email, telp, alamat }
  */
 router.post('/register', async (req, res) => {
   try {
@@ -37,7 +37,7 @@ router.post('/register', async (req, res) => {
 });
 
 /**
- * Login (bisa admin atau masyarakat)
+ * Login ( admin atau masyarakat)
  * Response: { token, role, user } inside payload
  */
 router.post('/login', async (req, res) => {
@@ -49,7 +49,7 @@ router.post('/login', async (req, res) => {
     const [adminRows] = await pool.query('SELECT * FROM admin WHERE email = ?', [email]);
     if (adminRows.length) {
       const admin = adminRows[0];
-      // handle plain or bcrypt password stored
+      // handle kata sandi biasa atau bcrypt yang disimpan
       let ok = false;
       if (admin.password && admin.password.startsWith('$2')) {
         ok = await bcrypt.compare(password, admin.password);

@@ -135,7 +135,7 @@ export default function UserProfile() {
                   }`}
                   onClick={() => setTab("account")}
                 >
-                  Account Settings
+                  Pengaturan Akun
                 </button>
 
                 <button

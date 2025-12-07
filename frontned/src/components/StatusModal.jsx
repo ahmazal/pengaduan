@@ -7,10 +7,9 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // tambahan
   const [tanggapan, setTanggapan] = useState("");
 
-  // Keep selectedStatus in sync when pengaduan prop changes
+  // Tetap sinkronkan status yang dipilih saat properti pengaduan berubah
   useEffect(() => {
     setSelectedStatus(pengaduan?.status || "");
   }, [pengaduan]);
@@ -23,12 +22,12 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
 
     setIsLoading(true);
     try {
-      // LOGIKA ASLI — tidak diubah
+
       await onStatusChange(pengaduan?.id_pengaduan, selectedStatus, tanggapan);
 
-      // ===============================
-      //   TAMBAHAN: KIRIM TANGGAPAN
-      // ===============================
+
+      // KIRIM TANGGAPAN
+
       if (tanggapan.trim() !== "") {
         try {
           await fetch(
@@ -46,7 +45,7 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           console.error("Gagal mengirim tanggapan:", err);
         }
       }
-      // ===============================
+    
 
       setSuccessMessage("Status berhasil diubah!");
       setTimeout(() => {
@@ -199,9 +198,9 @@ export default function StatusModal({ isOpen, onClose, pengaduan, onStatusChange
           </div>
         </div>
 
-        {/* ============================== */}
+
         {/*     TEXTAREA TANGGAPAN BARU     */}
-        {/* ============================== */}
+        
         <div className="mb-6 mt-4">
           <p className="text-gray-800 font-semibold mb-2 text-sm">Tanggapan Admin (opsional)</p>
           <textarea

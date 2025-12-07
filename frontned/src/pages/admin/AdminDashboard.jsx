@@ -144,7 +144,7 @@ export default function AdminDashboard() {
         </h2>
         <button
           onClick={fetchPengaduan}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm shadow"
+          className="cursor-pointer px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm shadow"
         >
           Refresh
         </button>
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+          className="cursor-pointer px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
         >
           <option value="Semua">Semua Status</option>
           <option value="Menunggu">Menunggu</option>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
                   <td className="p-3 text-center">
                     <button
                       onClick={() => handleOpenModal(p)}
-                      className="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-xs"
+                      className="cursor-pointer px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-xs"
                     >
                       Ubah Status
                     </button>

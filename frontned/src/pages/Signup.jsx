@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../services/api";
-import Swal from "sweetalert2"; // import sweetalert2
+import Swal from "sweetalert2";
 import BtnKembali from "../components/BtnKembali";
 
 export default function Register() {

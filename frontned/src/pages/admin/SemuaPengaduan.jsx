@@ -34,7 +34,7 @@ function SemuaPengaduan() {
   const [filteredPengaduan, setFilteredPengaduan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchNIK, setSearchNIK] = useState("");
-  const [sortOrder, setSortOrder] = useState("newest"); // newest atau oldest
+  const [sortOrder, setSortOrder] = useState("newest"); 
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPengaduan, setSelectedPengaduan] = useState(null);
@@ -50,7 +50,7 @@ function SemuaPengaduan() {
     setIsModalOpen(true);
   };
 
-  // Fetch semua pengaduan (DIPERBAIKI UNTUK REFRESH DATA INSTAN)
+  // Fetch semua pengaduan 
   const fetchAllPengaduan = async () => {
     try {
       setLoading(true);
@@ -64,8 +64,7 @@ function SemuaPengaduan() {
 
       setPengaduan(finalData);
 
-      // PENTING: Set ulang filter/sort result dengan data mentah baru
-      // Ini akan memicu useEffect di bawah untuk memproses data baru.
+ 
       setFilteredPengaduan(finalData);
     } catch (err) {
       console.error("Gagal fetch:", err);
@@ -76,9 +75,7 @@ function SemuaPengaduan() {
     }
   };
 
-  /**
-   * Handler untuk menghapus permanen laporan yang statusnya 'Tidak Valid'.
-   */
+  // Handler untuk menghapus permanen laporan yang statusnya 'Tidak Valid'
   const handleDeleteInvalid = async (idPengaduan) => {
     const confirmResult = await Swal.fire({
       icon: "warning",
@@ -106,10 +103,9 @@ function SemuaPengaduan() {
         confirmButtonColor: "#ea580c"
       });
       
-      // PENTING: Muat ulang data setelah penghapusan untuk memperbarui tabel
+      // Muat ulang data setelah penghapusan untuk memperbarui tabel
       fetchAllPengaduan();
     } catch (err) {
-      // Menangani error dari deleteInvalidPengaduan (berupa objek {status, message})
       const errorMessage =
         err.message ||
         "Gagal menghapus laporan. Pastikan statusnya 'Tidak Valid' dan Anda memiliki hak akses.";
@@ -158,12 +154,12 @@ function SemuaPengaduan() {
     }
   }
 
-// PDF RESMI PEMERINTAH
+// DOWNLOAD PDF  
 const handleDownloadOnePDF = async (p) => {
   const doc = new jsPDF();
   const black = [0, 0, 0];
 
-  // 1. KOP SURAT PEMERINTAH
+  // KOP SURAT 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
   doc.setTextColor(...black);
@@ -183,10 +179,10 @@ const handleDownloadOnePDF = async (p) => {
 
   // Garis
   doc.setLineWidth(1.5);
-  doc.line(20, 32, 190, 32); // tebal
+  doc.line(20, 32, 190, 32); 
 
   doc.setLineWidth(0.5);
-  doc.line(20, 34, 190, 34); // tipis
+  doc.line(20, 34, 190, 34);
 
   // JUDUL DOKUMEN
   doc.setFont("helvetica", "bold");
@@ -455,7 +451,7 @@ doc.line(130, signY + 38, 188, signY + 38);
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                className="cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
               >
                 <option value="Semua">Semua Status</option>
                 <option value="Menunggu">Menunggu</option>
@@ -473,7 +469,7 @@ doc.line(130, signY + 38, 188, signY + 38);
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                className="cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
               >
                 <option value="newest">Terbaru</option>
                 <option value="oldest">Terlama</option>
@@ -489,7 +485,7 @@ doc.line(130, signY + 38, 188, signY + 38);
                 setFilterStatus("Semua");
                 setSortOrder("newest");
               }}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm"
+              className="cursor-pointer px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm"
             >
               Reset Filter
             </button>
@@ -564,7 +560,7 @@ doc.line(130, signY + 38, 188, signY + 38);
                         {/* Tombol Lihat Detail */}
                         <button
                           onClick={() => handleOpenModal(p)}
-                          className="px-3 py-1 bg-blue-500 text-white rounded shadow hover:bg-blue-700 transition text-xs"
+                          className="cursor-pointer px-3 py-1 bg-blue-500 text-white rounded shadow hover:bg-blue-700 transition text-xs"
                         >
                           <FaWpforms />
                         </button>
@@ -572,7 +568,7 @@ doc.line(130, signY + 38, 188, signY + 38);
                         {/* Tombol Download PDF */}
                         <button
                           onClick={() => handleDownloadOnePDF(p)}
-                          className="flex justify-center items-center gap-1 px-3 py-1 bg-green-500 text-white rounded shadow hover:bg-green-700 transition text-xs"
+                          className="cursor-pointer flex justify-center items-center gap-1 px-3 py-1 bg-green-500 text-white rounded shadow hover:bg-green-700 transition text-xs"
                           title="Download PDF"
                         >
                           <Download size={14} />
@@ -582,7 +578,7 @@ doc.line(130, signY + 38, 188, signY + 38);
                         {p.status === "Tidak Valid" && (
                           <button
                             onClick={() => handleDeleteInvalid(p.id_pengaduan)}
-                            className="px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-700 transition text-xs"
+                            className="cursor-pointer px-3 py-1 bg-red-500 text-white rounded shadow hover:bg-red-700 transition text-xs"
                             title="Hapus permanen laporan dan fotonya dari server"
                           >
                             <GrFormTrash size={14} />

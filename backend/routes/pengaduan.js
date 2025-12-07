@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ----------------- Helper: kirim email (HTML sederhana, biru) -----------------
+// Helper: kirim email 
 async function sendEmailToUser(userEmail, subject, htmlContent) {
   if (!userEmail) {
     console.warn("sendEmailToUser: userEmail kosong, skip send");
@@ -48,7 +48,7 @@ async function getUserByNik(nik) {
   return rows[0] || null;
 }
 
-// ----------------- Routes -----------------
+// Routes 
 
 // GET semua pengaduan
 router.get("/", async (req, res) => {
@@ -155,7 +155,7 @@ router.post("/", auth, upload.single("foto"), async (req, res) => {
 router.put("/:id/status", auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, tanggapan_opsional } = req.body; // tetap
+    const { status, tanggapan_opsional } = req.body; 
 
     // Cek role admin
     if (req.user && req.user.role && req.user.role.toLowerCase() !== "admin") {
@@ -235,7 +235,7 @@ router.put("/:id/status", auth, async (req, res) => {
       </div>
     `;
 
-    // KIRIM EMAIL DI SINI SAJA
+    // KIRIM EMAIL DI SINI 
     await sendEmailToUser(userEmail, subject, html);
 
     return response(
@@ -341,7 +341,7 @@ router.delete("/:id/delete-invalid", auth, async (req, res) => {
     );
 
     if (result.affectedRows > 0) {
-      // Hapus file foto jika ada
+      // Hapus file foto 
       if (fotoFilename) {
         const filePath = path.join(__dirname, "../uploads/", fotoFilename);
         fs.unlink(filePath, (err) => {
@@ -399,7 +399,7 @@ router.post("/:id/confirm-complete", auth, async (req, res) => {
     const { id } = req.params;
     const nik = req.user.nik;
 
-    // Get current pengaduan (try including is_locked if present)
+    // Dapatkan pengaduan terkini
     let rows;
     let needMigration = false;
     try {

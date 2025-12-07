@@ -1,7 +1,7 @@
 const db = require("../config/db");
 const { sendEmail } = require("../services/emailService");
 
-// 1. Notifikasi laporan invalid
+// Notifikasi laporan invalid
 exports.rejectPengaduan = async (req, res) => {
   const { id } = req.params;
 
@@ -23,7 +23,7 @@ exports.rejectPengaduan = async (req, res) => {
   res.json({ message: "Laporan dihapus & email notifikasi dikirim" });
 };
 
-// 2. Notifikasi ketika admin membalas
+// Notifikasi ketika admin membalas
 exports.replyPengaduan = async (req, res) => {
   const { id } = req.params;
   const { balasan } = req.body;
@@ -42,7 +42,7 @@ exports.replyPengaduan = async (req, res) => {
   res.json({ message: "Balasan dikirim ke user via email" });
 };
 
-// 3. Notifikasi perubahan status laporan
+// Notifikasi perubahan status laporan
 exports.updateStatus = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;

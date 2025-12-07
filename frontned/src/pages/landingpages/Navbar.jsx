@@ -60,7 +60,7 @@ function Navbar() {
     setShowDropdown(false);
   };
 
-  // =========== AVATAR FIRST LETTER FROM EMAIL ===========
+  // AVATAR FIRST LETTER FROM EMAIL
   const getAvatarLetter = () => {
     if (!user || !user.email) return "U";
     return user.email.charAt(0).toUpperCase();

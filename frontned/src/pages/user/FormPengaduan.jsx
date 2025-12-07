@@ -213,9 +213,9 @@ export default function FormPengaduan() {
             </div>
 
             {/* Tanggal */}
-            <div className="relative">
+            <div className="relative ">
               <Calendar
-                className="absolute left-5 top-4 text-gray-700"
+                className="absolute left-5 top-4 text-gray-700" 
                 size={22}
               />
               <input
@@ -225,11 +225,11 @@ export default function FormPengaduan() {
                 onChange={(e) =>
                   setFilled({ ...filled, tanggal: e.target.value })
                 }
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14"
+                className=" cursor-pointer w-full rounded-xl bg-gray-50 border border-gray-300 p-4 pl-14"
               />
               <label
                 htmlFor="tanggal"
-                className={`absolute left-14 bg-white px-2 transition-all duration-200 ${
+                className={`absolute left-14 bg-white px-2 transition-all duration-200  ${
                   filled.tanggal
                     ? "-top-3 text-xs text-orange-600"
                     : "top-4 text-gray-400"
@@ -267,14 +267,14 @@ export default function FormPengaduan() {
             {/* FOTO */}
             <div className="relative">
               <Image
-                className="absolute left-5 top-3.5 text-gray-700"
+                className="cursor-pointer absolute left-5 top-3.5 text-gray-700"
                 size={20}
               />
               <input
                 type="file"
                 ref={fileRef}
                 onChange={(e) => setFile(e.target.files[0])}
-                className="w-full rounded-xl bg-gray-50 border border-gray-300 pl-14 py-2.5"
+                className="cursor-pointer w-full rounded-xl bg-gray-50 border border-gray-300 pl-14 py-2.5"
               />
             </div>
 
@@ -309,7 +309,7 @@ export default function FormPengaduan() {
               <button
                 type="button"
                 onClick={() => setIsMapOpen(true)}
-                className="absolute right-3 top-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
+                className="cursor-pointer absolute right-3 top-3 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
               >
                 Pilih Lokasi
               </button>
@@ -321,14 +321,14 @@ export default function FormPengaduan() {
                 onClick={() =>
                   setFilled({ judul: "", tanggal: "", isi: "", lokasi: "" })
                 }
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl"
+                className="cursor-pointer px-6 py-3 border border-gray-300 text-gray-700 rounded-xl"
               >
                 Reset
               </button>
 
               <button
                 onClick={handleSubmit}
-                className="px-8 py-3 bg-orange-600 text-white rounded-xl"
+                className="cursor-pointer px-8 py-3 bg-orange-600 text-white rounded-xl"
               >
                 Kirim Pengaduan
               </button>
@@ -366,7 +366,7 @@ export default function FormPengaduan() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setIsMapOpen(false)}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg cursor-pointer"
               >
                 Tutup
               </button>

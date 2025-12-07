@@ -48,7 +48,7 @@ export default function ListAduan() {
   const [filterStatus, setFilterStatus] = useState("Semua");
   const [sortBy, setSortBy] = useState("terbaru");
 
-  // === modal detail & edit state (dari fitur yang diminta) ===
+  // modal detail & edit state 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
 
@@ -538,7 +538,7 @@ export default function ListAduan() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option>Semua</option>
                 <option>Menunggu</option>
@@ -553,7 +553,7 @@ export default function ListAduan() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="cursor-pointer w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="terbaru">Terbaru</option>
                 <option value="terlama">Terlama</option>
@@ -567,7 +567,7 @@ export default function ListAduan() {
                 setFilterStatus("Semua");
                 setSortBy("terbaru");
               }}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 cursor-pointer" 
             >
               Reset Filter
             </button>
@@ -655,7 +655,7 @@ export default function ListAduan() {
                                 onClick={() =>
                                   handleConfirmComplete(complaint.id_pengaduan)
                                 }
-                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                                className="cursor-pointer px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                               >
                                 Tandai Selesai
                               </button>
@@ -665,7 +665,7 @@ export default function ListAduan() {
                           )}
                           <button
                             onClick={() => handleDownloadOnePDF(complaint)}
-                            className="flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600 text-sm font-medium transition-all whitespace-nowrap"
+                            className="cursor-pointer flex items-center gap-1 px-3 py-1 bg-orange-500 text-white rounded-md hover:bg-orange-600 text-sm font-medium transition-all whitespace-nowrap"
                             title="Download PDF"
                           >
                             <Download size={16} />
@@ -675,7 +675,7 @@ export default function ListAduan() {
                           {/* Lihat Detail button */}
                           <button
                             onClick={() => openDetailModal(complaint)}
-                            className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-all whitespace-nowrap"
+                            className="cursor-pointer flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-all whitespace-nowrap"
                             title="Lihat Detail"
                           >
                             <FaWpforms />
@@ -730,7 +730,7 @@ export default function ListAduan() {
                           onClick={() =>
                             handleConfirmComplete(complaint.id_pengaduan)
                           }
-                          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                          className="cursor-pointer px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                         >
                           Tandai Selesai
                         </button>
@@ -793,7 +793,7 @@ export default function ListAduan() {
                 {/* Only top close button */}
                 <button
                   onClick={closeDetailModal}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  className="cursor-pointer px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 >
                   Tutup
                 </button>
@@ -896,7 +896,7 @@ export default function ListAduan() {
               <div className="p-4 border-t flex justify-end">
                 <button
                   onClick={openEditFromDetail}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                  className="cursor-pointer px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                 >
                   Edit
                 </button>
@@ -923,7 +923,7 @@ export default function ListAduan() {
                 </h3>
                 <button
                   onClick={closeEditModal}
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                  className="cursor-pointer px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
                 >
                   Batal
                 </button>
@@ -1002,7 +1002,7 @@ export default function ListAduan() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileSelect}
-                    className="mt-2"
+                    className="cursor-pointer mt-2"
                   />
                   {fileError && (
                     <p className="text-sm text-red-600 mt-1">{fileError}</p>
@@ -1023,14 +1023,14 @@ export default function ListAduan() {
                   <button
                     type="button"
                     onClick={closeEditModal}
-                    className="px-4 py-2 rounded border"
+                    className="cursor-pointer px-4 py-2 rounded border"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
                     disabled={savingEdit}
-                    className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+                    className="cursor-pointer px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
                   >
                     {savingEdit ? "Menyimpan..." : "Simpan"}
                   </button>

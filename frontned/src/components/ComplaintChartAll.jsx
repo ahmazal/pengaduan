@@ -73,12 +73,12 @@ export default function ComplaintChartAll() {
         setLoading(true);
         const res = await apiClient.get('/pengaduan');
         
-        // Handle both response formats
+        // Tangani format respons
         const pengaduan = Array.isArray(res.data)
           ? res.data[0]?.payload || []
           : (res.data.payload || res.data.data || []);
 
-        // ======================== LINE CHART: Last 30 days ========================
+        // LINE CHART: Last 30 days
         const today = new Date();
         const labels = [];
         const counts = [];
@@ -117,7 +117,7 @@ export default function ComplaintChartAll() {
           }],
         });
 
-        // ======================== BAR CHART: Status distribution ========================
+        // BAR CHART: Status distribution 
         const menungguCount = pengaduan.filter(p => p.status === "Menunggu").length;
         const diprosesCount = pengaduan.filter(p => p.status === "Diproses").length;
         const selesaiCount = pengaduan.filter(p => p.status === "Selesai").length;
@@ -144,7 +144,7 @@ export default function ComplaintChartAll() {
           }],
         });
 
-        // ======================== Statistics ========================
+        // Statistics 
         setStats({
           total: pengaduan.length,
           menunggu: menungguCount,
