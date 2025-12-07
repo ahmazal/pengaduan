@@ -9,7 +9,7 @@ function CaraKerja() {
     },
     {
       title: "Login",
-      desc: "Tunggu verifikasi dari petugas",
+      desc: "Masuk menggunakan Email dan Password tadi",
       side: "right",
     },
     {
