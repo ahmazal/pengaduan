@@ -6,7 +6,7 @@ const router = express.Router();
 const pool = require("../config/db");
 const response = require("../response");
 const auth = require("../middleware/auth");
-const transporter = require("../config/mailer"); // harus export transporter
+const transporter = require("../config/mailer"); 
 
 // Konfigurasi Multer untuk upload foto
 const storage = multer.diskStorage({
